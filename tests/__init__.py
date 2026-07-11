@@ -1,0 +1,3 @@
+"""
+ResearchEase AI API tests.
+"""
