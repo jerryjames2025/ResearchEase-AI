@@ -41,6 +41,32 @@ class ResearchEaseAPI:
         self.enable_fallback = (
             enable_fallback
         )
+        
+    def vector_providers(
+    self,
+) -> dict:
+        return self._request(
+        "GET",
+        "/api/v1/vector/providers",
+    )
+
+
+    def vector_health(
+    self,
+) -> dict:
+        return self._request(
+        "GET",
+        "/api/v1/vector/health",
+    )
+
+
+    def pinecone_stats(
+    self,
+) -> dict:
+        return self._request(
+        "GET",
+        "/api/v1/vector/pinecone/stats",
+    )
 
     def _llm_headers(
         self,

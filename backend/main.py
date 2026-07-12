@@ -41,7 +41,17 @@ from backend.storage.mongo import (
 from backend.storage.postgres import (
     create_tables,
 )
-
+from backend.routers import (
+    chat,
+    health,
+    literature,
+    llm,
+    mathematics,
+    papers,
+    research,
+    storage,
+    vector,
+)
 
 logging.basicConfig(
     level=logging.INFO,
@@ -134,6 +144,8 @@ app = FastAPI(
         "research-paper analysis, RAG, external "
         "research, mathematical explanation and "
         "literature-review generation."
+        "Persistent multi-provider research API with "
+        "switchable FAISS and Pinecone vector storage."
     ),
     docs_url="/docs",
     redoc_url="/redoc",
@@ -186,6 +198,9 @@ def root() -> dict[str, str]:
             f"{settings.api_prefix}"
             "/llm/providers"
         ),
+        "vector_providers": (
+            f"{settings.api_prefix}"
+            "/vector/providers"),
     }
 
 
@@ -203,6 +218,10 @@ app.include_router(
 
 app.include_router(
     llm.router,
+    prefix=api_prefix,
+)
+app.include_router(
+    vector.router,
     prefix=api_prefix,
 )
 

@@ -1,4 +1,5 @@
 from __future__ import annotations
+from backend.core.settings import get_settings
 
 from fastapi.testclient import (
     TestClient,
@@ -20,14 +21,10 @@ def test_health_endpoint() -> None:
     assert response.status_code == 200
 
     payload = response.json()
+    settings = get_settings()
 
-    assert payload[
-        "status"
-    ] == "healthy"
-
-    assert payload[
-        "version"
-    ] == "8.0.0"
+    assert payload["status"] == "healthy"
+    assert payload["version"] == settings.api_version
 
 
 def test_root_endpoint() -> None:
@@ -189,3 +186,59 @@ def test_invalid_llm_provider_header() -> None:
     assert payload[
         "error"
     ] == "invalid_llm_provider"
+
+def test_vector_provider_catalog() -> None:
+    response = client.get(
+        "/api/v1/vector/providers"
+    )
+
+    assert response.status_code == 200
+
+    payload = response.json()
+
+    providers = {
+        item["provider"]
+        for item
+        in payload["providers"]
+    }
+
+    assert providers == {
+        "faiss",
+        "pinecone",
+    }
+
+
+def test_vector_health_endpoint() -> None:
+    response = client.get(
+        "/api/v1/vector/health"
+    )
+
+    assert response.status_code == 200
+
+    payload = response.json()
+
+    assert "faiss" in payload[
+        "providers"
+    ]
+
+    assert "pinecone" in payload[
+        "providers"
+    ]
+
+
+def test_invalid_vector_backend() -> None:
+    response = client.post(
+        "/api/v1/papers/fake-session/index",
+        json={
+            "embedding_model": (
+                "sentence-transformers/"
+                "all-MiniLM-L6-v2"
+            ),
+            "device": "cpu",
+            "vector_backend": (
+                "unsupported"
+            ),
+        },
+    )
+
+    assert response.status_code == 422

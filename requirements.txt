@@ -35,3 +35,9 @@ langchain-anthropic>=1.0,<2
 langchain-google-genai>=4.0,<5
 langchain-huggingface>=1.0,<2
 huggingface-hub>=0.34
+
+# ---------------------------------------------------------
+# Version 10: Pinecone vector database
+# ---------------------------------------------------------
+
+pinecone>=9,<10

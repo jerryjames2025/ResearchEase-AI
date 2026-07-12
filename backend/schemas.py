@@ -24,6 +24,13 @@ class AnswerMode(
         "expanded_research"
     )
 
+class VectorBackend(
+    str,
+    Enum,
+):
+    FAISS = "faiss"
+    PINECONE = "pinecone"
+
 
 class MessageResponse(BaseModel):
     message: str
@@ -75,6 +82,10 @@ class SessionResponse(BaseModel):
     index_ready: bool
     chunk_count: int
     chat_message_count: int = 0
+    vector_backend: str = "faiss"
+    vector_index_name: str = ""
+    vector_namespace: str = ""
+    vector_dimension: int = 0
 
 
 class SessionListResponse(BaseModel):
@@ -122,14 +133,23 @@ class IndexRequest(BaseModel):
         ),
     )
 
+    vector_backend: VectorBackend = (
+        VectorBackend.FAISS
+    )
+
 
 class IndexResponse(BaseModel):
     session_id: str
     chunk_count: int
     embedding_model: str
     device: str
-    index_path: str = ""
 
+    vector_backend: VectorBackend
+    vector_dimension: int
+
+    index_path: str = ""
+    vector_index_name: str = ""
+    vector_namespace: str = ""
 
 class PaperSourceResponse(BaseModel):
     rank: int

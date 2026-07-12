@@ -32,6 +32,7 @@ from backend.schemas import (
     PaperUploadResponse,
     SessionListResponse,
     SessionResponse,
+    VectorBackend,
 )
 from services.embedding_model import (
     load_embedding_service,
@@ -42,6 +43,9 @@ from services.ollama_client import (
 from services.pdf_parser import (
     create_page_chunks,
     extract_pdf,
+)
+from services.pinecone_vector_store import (
+    PineconeVectorStore,
 )
 from services.vector_store import (
     FaissVectorStore,
@@ -80,6 +84,18 @@ def _session_response(
         chat_message_count=len(
             session.chat_history
         ),
+        vector_backend=(
+            session.vector_backend
+        ),
+        vector_index_name=(
+            session.vector_index_name
+        ),
+        vector_namespace=(
+            session.vector_namespace
+        ),
+        vector_dimension=(
+            session.vector_dimension
+        ),
     )
 
 
@@ -101,7 +117,9 @@ def list_sessions(
             session_id=item[
                 "session_id"
             ],
-            filename=item["filename"],
+            filename=item[
+                "filename"
+            ],
             page_count=item[
                 "page_count"
             ],
@@ -126,8 +144,26 @@ def list_sessions(
             chat_message_count=len(
                 session_store
                 .get_chat_messages(
-                    item["session_id"]
+                    item[
+                        "session_id"
+                    ]
                 )
+            ),
+            vector_backend=item.get(
+                "vector_backend",
+                "faiss",
+            ),
+            vector_index_name=item.get(
+                "vector_index_name",
+                "",
+            ),
+            vector_namespace=item.get(
+                "vector_namespace",
+                "",
+            ),
+            vector_dimension=item.get(
+                "vector_dimension",
+                0,
             ),
         )
         for item in summaries
@@ -245,7 +281,7 @@ def delete_session(
     return MessageResponse(
         message=(
             "Research session and "
-            "persisted data deleted."
+            "persisted vector data deleted."
         )
     )
 
@@ -324,6 +360,16 @@ def build_paper_index(
         session.paper
     )
 
+    if not chunks:
+        raise APIError(
+            status_code=400,
+            code="no_chunks",
+            detail=(
+                "No text chunks were created "
+                "from this paper."
+            ),
+        )
+
     embedding_service = (
         load_embedding_service(
             request.embedding_model,
@@ -341,10 +387,70 @@ def build_paper_index(
         )
     )
 
-    vector_store = FaissVectorStore(
-        chunks=chunks,
-        embeddings=embeddings,
+    vector_dimension = int(
+        embeddings.shape[1]
     )
+
+    vector_backend = (
+        request.vector_backend
+    )
+
+    vector_index_name = ""
+    vector_namespace = ""
+
+    if (
+        vector_backend
+        == VectorBackend.FAISS
+    ):
+        vector_store = (
+            FaissVectorStore(
+                chunks=chunks,
+                embeddings=embeddings,
+            )
+        )
+
+    elif (
+        vector_backend
+        == VectorBackend.PINECONE
+    ):
+        try:
+            vector_store = (
+                PineconeVectorStore
+                .from_embeddings(
+                    chunks=chunks,
+                    embeddings=embeddings,
+                    session_id=(
+                        session.session_id
+                    ),
+                )
+            )
+
+        except Exception as exc:
+            raise APIError(
+                status_code=503,
+                code=(
+                    "pinecone_index_failed"
+                ),
+                detail=str(exc),
+            ) from exc
+
+        vector_index_name = (
+            vector_store.index_name
+        )
+
+        vector_namespace = (
+            vector_store.namespace
+        )
+
+    else:
+        raise APIError(
+            status_code=400,
+            code="invalid_vector_backend",
+            detail=(
+                "Supported vector backends "
+                "are faiss and pinecone."
+            ),
+        )
 
     index_path = (
         session_store.save_index(
@@ -353,6 +459,18 @@ def build_paper_index(
             vector_store,
             request.embedding_model,
             request.device,
+            vector_backend=(
+                vector_backend.value
+            ),
+            vector_index_name=(
+                vector_index_name
+            ),
+            vector_namespace=(
+                vector_namespace
+            ),
+            vector_dimension=(
+                vector_dimension
+            ),
         )
     )
 
@@ -369,5 +487,17 @@ def build_paper_index(
         device=str(
             embedding_service.device
         ),
+        vector_backend=(
+            vector_backend
+        ),
+        vector_dimension=(
+            vector_dimension
+        ),
         index_path=index_path,
+        vector_index_name=(
+            vector_index_name
+        ),
+        vector_namespace=(
+            vector_namespace
+        ),
     )

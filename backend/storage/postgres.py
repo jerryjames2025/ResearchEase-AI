@@ -17,7 +17,6 @@ from sqlalchemy import (
     delete,
     select,
 )
-
 from sqlalchemy.orm import (
     DeclarativeBase,
     Mapped,
@@ -136,6 +135,42 @@ class ResearchSessionModel(Base):
         mapped_column(
             String(50),
             default="",
+            nullable=False,
+        )
+    )
+
+    # -----------------------------------------------------
+    # Version 10 vector-backend fields
+    # -----------------------------------------------------
+
+    vector_backend: Mapped[str] = (
+        mapped_column(
+            String(20),
+            default="faiss",
+            nullable=False,
+        )
+    )
+
+    vector_index_name: Mapped[str] = (
+        mapped_column(
+            String(200),
+            default="",
+            nullable=False,
+        )
+    )
+
+    vector_namespace: Mapped[str] = (
+        mapped_column(
+            String(200),
+            default="",
+            nullable=False,
+        )
+    )
+
+    vector_dimension: Mapped[int] = (
+        mapped_column(
+            Integer,
+            default=0,
             nullable=False,
         )
     )
@@ -271,18 +306,18 @@ SessionLocal = sessionmaker(
 
 @contextmanager
 def session_scope() -> Iterator[Session]:
-    database_session = SessionLocal()
+    database = SessionLocal()
 
     try:
-        yield database_session
-        database_session.commit()
+        yield database
+        database.commit()
 
     except Exception:
-        database_session.rollback()
+        database.rollback()
         raise
 
     finally:
-        database_session.close()
+        database.close()
 
 
 def create_tables() -> None:
@@ -326,7 +361,6 @@ class PostgresRepository:
         extracted_characters: int,
         mongo_document_id: str,
     ) -> ResearchSessionModel:
-
         row = ResearchSessionModel(
             session_id=session_id,
             filename=filename,
@@ -348,7 +382,6 @@ class PostgresRepository:
         self,
         session_id: str,
     ) -> ResearchSessionModel | None:
-
         with session_scope() as database:
             return database.get(
                 ResearchSessionModel,
@@ -359,7 +392,6 @@ class PostgresRepository:
         self,
         limit: int = 100,
     ) -> list[ResearchSessionModel]:
-
         with session_scope() as database:
             statement = (
                 select(
@@ -373,7 +405,7 @@ class PostgresRepository:
                     max(
                         1,
                         min(
-                            limit,
+                            int(limit),
                             500,
                         ),
                     )
@@ -390,7 +422,6 @@ class PostgresRepository:
         self,
         session_id: str,
     ) -> None:
-
         with session_scope() as database:
             row = database.get(
                 ResearchSessionModel,
@@ -411,8 +442,11 @@ class PostgresRepository:
         embedding_model_name: str,
         embedding_device: str,
         faiss_index_path: str,
+        vector_backend: str,
+        vector_index_name: str,
+        vector_namespace: str,
+        vector_dimension: int,
     ) -> None:
-
         with session_scope() as database:
             row = database.get(
                 ResearchSessionModel,
@@ -423,16 +457,38 @@ class PostgresRepository:
                 return
 
             row.index_ready = True
-            row.chunk_count = chunk_count
+            row.chunk_count = int(
+                chunk_count
+            )
+
             row.embedding_model_name = (
                 embedding_model_name
             )
+
             row.embedding_device = (
                 embedding_device
             )
+
             row.faiss_index_path = (
                 faiss_index_path
             )
+
+            row.vector_backend = (
+                vector_backend
+            )
+
+            row.vector_index_name = (
+                vector_index_name
+            )
+
+            row.vector_namespace = (
+                vector_namespace
+            )
+
+            row.vector_dimension = int(
+                vector_dimension
+            )
+
             row.updated_at = utcnow()
 
     def append_chat_messages(
@@ -440,7 +496,6 @@ class PostgresRepository:
         session_id: str,
         messages: list[dict],
     ) -> None:
-
         with session_scope() as database:
             for message in messages:
                 database.add(
@@ -491,7 +546,6 @@ class PostgresRepository:
         self,
         session_id: str,
     ) -> list[dict]:
-
         with session_scope() as database:
             statement = (
                 select(
@@ -539,7 +593,6 @@ class PostgresRepository:
         self,
         session_id: str,
     ) -> ResearchSessionModel | None:
-
         with session_scope() as database:
             row = database.get(
                 ResearchSessionModel,
@@ -574,6 +627,18 @@ class PostgresRepository:
                 ),
                 mongo_document_id=(
                     row.mongo_document_id
+                ),
+                vector_backend=(
+                    row.vector_backend
+                ),
+                vector_index_name=(
+                    row.vector_index_name
+                ),
+                vector_namespace=(
+                    row.vector_namespace
+                ),
+                vector_dimension=(
+                    row.vector_dimension
                 ),
             )
 

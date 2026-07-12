@@ -16,7 +16,7 @@ class APISettings(BaseSettings):
     """
 
     app_name: str = "ResearchEase AI API"
-    api_version: str = "9.0.0"
+    api_version: str = "10.0.0"
     api_prefix: str = "/api/v1"
 
     debug: bool = True
@@ -76,6 +76,32 @@ class APISettings(BaseSettings):
 
     auto_create_tables: bool = False
     strict_storage_startup: bool = False
+    
+    # -----------------------------------------------------
+# Version 10: Vector databases
+# -----------------------------------------------------
+
+    default_vector_backend: str = "faiss"
+
+    pinecone_api_key: str = ""
+
+    pinecone_index_name: str = (
+    "researchease-vectors"
+)
+
+    pinecone_cloud: str = "aws"
+    pinecone_region: str = "us-east-1"
+    pinecone_metric: str = "cosine"
+
+    pinecone_auto_create_index: bool = True
+
+    pinecone_namespace_prefix: str = (
+    "research-session"
+)
+
+    pinecone_upsert_batch_size: int = 100
+
+    pinecone_freshness_timeout_seconds: int = 45
 
     # -----------------------------------------------------
     # External academic APIs
