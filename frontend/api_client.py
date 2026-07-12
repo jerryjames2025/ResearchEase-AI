@@ -430,3 +430,102 @@ class ResearchEaseAPI:
             files=multipart_files,
             data=form_data,
         )
+    def fine_tuning_health(
+    self,
+) -> dict:
+        return self._request(
+        "GET",
+        "/api/v1/fine-tuning/health",
+    )
+
+
+    def fine_tuning_template(
+    self,
+) -> dict:
+        return self._request(
+        "GET",
+        "/api/v1/fine-tuning/template",
+    )
+
+
+    def validate_fine_tuning_dataset(
+    self,
+    examples: list[dict],
+) -> dict:
+        return self._request(
+        "POST",
+        "/api/v1/fine-tuning/validate",
+        json={
+            "examples": examples
+        },
+    )
+
+
+    def start_fine_tuning_job(
+    self,
+    payload: dict,
+) -> dict:
+        return self._request(
+        "POST",
+        "/api/v1/fine-tuning/jobs",
+        json=payload,
+    )
+
+
+    def fine_tuning_jobs(
+    self,
+    limit: int = 50,
+) -> dict:
+        return self._request(
+        "GET",
+        (
+            "/api/v1/fine-tuning/jobs"
+            f"?limit={limit}"
+        ),
+    )
+
+
+    def fine_tuning_job(
+    self,
+    job_id: str,
+) -> dict:
+        return self._request(
+        "GET",
+        (
+            "/api/v1/fine-tuning/jobs/"
+            f"{job_id}"
+        ),
+    )
+
+
+    def fine_tuning_adapters(
+    self,
+) -> dict:
+        return self._request(
+        "GET",
+        "/api/v1/fine-tuning/adapters",
+    )
+
+
+    def generate_with_adapter(
+    self,
+    payload: dict,
+) -> dict:
+        return self._request(
+        "POST",
+        "/api/v1/fine-tuning/generate",
+        json=payload,
+    )
+
+
+    def delete_fine_tuning_adapter(
+    self,
+    adapter_name: str,
+) -> dict:
+        return self._request(
+        "DELETE",
+        (
+            "/api/v1/fine-tuning/"
+            f"adapters/{adapter_name}"
+        ),
+    )

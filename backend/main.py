@@ -5,6 +5,20 @@ from contextlib import (
 )
 import logging
 
+from backend.routers import (
+    chat,
+    evaluation,
+    fine_tuning,
+    health,
+    literature,
+    llm,
+    mathematics,
+    papers,
+    research,
+    storage,
+    vector,
+)
+
 from fastapi import FastAPI
 from fastapi.exceptions import (
     RequestValidationError,
@@ -213,10 +227,14 @@ def root() -> dict[str, str]:
         "vector_providers": (
             f"{settings.api_prefix}"
             "/vector/providers"),
+        
         "evaluation_health": (
             f"{settings.api_prefix}"
-            "/evaluation/health"
-),
+            "/evaluation/health"),
+        
+        "fine_tuning_health": (
+            f"{settings.api_prefix}"
+            "/fine-tuning/health"),
     }
 
 
@@ -242,6 +260,11 @@ app.include_router(
 )
 app.include_router(
     evaluation.router,
+    prefix=api_prefix,
+)
+
+app.include_router(
+    fine_tuning.router,
     prefix=api_prefix,
 )
 app.include_router(

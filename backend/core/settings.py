@@ -16,7 +16,7 @@ class APISettings(BaseSettings):
     """
 
     app_name: str = "ResearchEase AI API"
-    api_version: str = "11.0.0"
+    api_version: str = "12.0.0"
     api_prefix: str = "/api/v1"
 
     debug: bool = True
@@ -42,6 +42,44 @@ class APISettings(BaseSettings):
     evaluation_default_top_k: int = 5
 
     evaluation_judge_temperature: float = 0.0
+    
+# -----------------------------------------------------
+# Version 12: LoRA and PEFT fine-tuning
+# -----------------------------------------------------
+
+    fine_tuning_base_model: str = (
+    "Qwen/Qwen2.5-0.5B-Instruct"
+)
+
+    fine_tuning_output_dir: Path = Path(
+    "artifacts/lora_adapters"
+)
+
+    fine_tuning_jobs_dir: Path = Path(
+    "artifacts/fine_tuning_jobs"
+)
+
+    fine_tuning_temp_dir: Path = Path(
+    "artifacts/fine_tuning_temp"
+)
+
+    fine_tuning_max_examples: int = 500
+
+    fine_tuning_default_max_sequence_length: int = 256
+
+    fine_tuning_default_epochs: float = 1.0
+
+    fine_tuning_default_learning_rate: float = 0.0002
+
+    fine_tuning_default_lora_r: int = 8
+
+    fine_tuning_default_lora_alpha: int = 16
+
+    fine_tuning_default_lora_dropout: float = 0.05
+
+    fine_tuning_max_new_tokens: int = 256
+
+    fine_tuning_max_concurrent_jobs: int = 1
 
     model_config = SettingsConfigDict(
         env_prefix="RESEARCHEASE_",

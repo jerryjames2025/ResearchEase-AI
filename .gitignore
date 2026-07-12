@@ -12,3 +12,10 @@ __pycache__/
 # MLflow runtime data
 data/mlflow/
 data/evaluations/
+# Fine-tuning outputs
+artifacts/lora_adapters/
+artifacts/fine_tuning_jobs/
+artifacts/fine_tuning_temp/
+
+# Hugging Face cache, when stored locally
+.huggingface/

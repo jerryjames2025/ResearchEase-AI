@@ -310,3 +310,95 @@ def test_empty_evaluation_dataset_rejected() -> None:
     )
 
     assert response.status_code == 422
+
+def test_fine_tuning_health_endpoint() -> None:
+    response = client.get(
+        "/api/v1/fine-tuning/health"
+    )
+
+    assert response.status_code == 200
+
+    payload = response.json()
+
+    assert payload["status"] == "healthy"
+    assert "cuda_available" in payload
+    assert "base_model" in payload
+
+
+def test_fine_tuning_template_endpoint() -> None:
+    response = client.get(
+        "/api/v1/fine-tuning/template"
+    )
+
+    assert response.status_code == 200
+
+    payload = response.json()
+
+    assert payload["adapter_name"]
+    assert payload["base_model"]
+    assert len(payload["examples"]) >= 4
+
+
+def test_fine_tuning_dataset_validation() -> None:
+    response = client.post(
+        "/api/v1/fine-tuning/validate",
+        json={
+            "examples": [
+                {
+                    "instruction": (
+                        "Explain RAG."
+                    ),
+                    "input": (
+                        "RAG retrieves context."
+                    ),
+                    "output": (
+                        "RAG retrieves relevant "
+                        "context before generation."
+                    ),
+                }
+            ]
+        },
+    )
+
+    assert response.status_code == 200
+
+    payload = response.json()
+
+    assert payload[
+        "example_count"
+    ] == 1
+
+
+def test_fine_tuning_adapter_catalog() -> None:
+    response = client.get(
+        "/api/v1/fine-tuning/adapters"
+    )
+
+    assert response.status_code == 200
+
+    payload = response.json()
+
+    assert "adapters" in payload
+
+
+def test_fine_tuning_rejects_too_few_examples() -> None:
+    response = client.post(
+        "/api/v1/fine-tuning/jobs",
+        json={
+            "adapter_name": (
+                "invalid-small-dataset"
+            ),
+            "examples": [
+                {
+                    "instruction": (
+                        "Explain RAG."
+                    ),
+                    "output": (
+                        "RAG retrieves context."
+                    ),
+                }
+            ],
+        },
+    )
+
+    assert response.status_code == 422

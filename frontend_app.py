@@ -2,6 +2,9 @@ from __future__ import annotations
 
 import json
 import os
+from frontend.fine_tuning_panel import (
+    render_fine_tuning_panel,
+)
 
 import streamlit as st
 from frontend.evaluation_panel import (render_evaluation_panel,)
@@ -17,12 +20,12 @@ from frontend.vector_controls import (
 
 
 st.set_page_config(
-    page_title="ResearchEase AI — Version 11",
+    page_title="ResearchEase AI — Version 12",
     page_icon="📚",
     layout="wide",
 )
 
-st.title("📚 ResearchEase AI — Version 11")
+st.title("📚 ResearchEase AI — Version 12")
 
 st.caption(
     "FastAPI-powered research assistant with persistent storage, "
@@ -611,6 +614,7 @@ if index_metadata.get(
     math_tab,
     literature_tab,
     evaluation_tab,
+    fine_tuning_tab,
 ) = st.tabs(
     [
         "Paper",
@@ -619,6 +623,7 @@ if index_metadata.get(
         "Math",
         "Literature Review",
         "RAG Evaluation",
+        "LoRA Fine-Tuning",
     ]
 )
 
@@ -1224,4 +1229,12 @@ with evaluation_tab:
         explanation_level=(
             explanation_level
         ),
+    )
+# ---------------------------------------------------------
+# Version 12 LoRA fine-tuning tab
+# ---------------------------------------------------------
+
+with fine_tuning_tab:
+    render_fine_tuning_panel(
+        api
     )
