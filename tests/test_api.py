@@ -242,3 +242,71 @@ def test_invalid_vector_backend() -> None:
     )
 
     assert response.status_code == 422
+    
+def test_evaluation_health_endpoint() -> None:
+    response = client.get(
+        "/api/v1/evaluation/health"
+    )
+
+    assert response.status_code == 200
+
+    payload = response.json()
+
+    assert payload["status"] in {
+        "healthy",
+        "degraded",
+    }
+
+    assert (
+        "tracking_uri"
+        in payload
+    )
+
+    assert (
+        "experiment_name"
+        in payload
+    )
+
+
+def test_evaluation_template() -> None:
+    response = client.get(
+        "/api/v1/evaluation/template"
+    )
+
+    assert response.status_code == 200
+
+    payload = response.json()
+
+    assert payload[
+        "dataset_name"
+    ]
+
+    assert len(
+        payload["cases"]
+    ) >= 1
+
+    assert (
+        "question"
+        in payload["cases"][0]
+    )
+
+
+def test_empty_evaluation_dataset_rejected() -> None:
+    response = client.post(
+        "/api/v1/evaluation/run",
+        json={
+            "session_id": (
+                "fake-session"
+            ),
+            "dataset_name": (
+                "empty-dataset"
+            ),
+            "cases": [],
+            "top_k": 5,
+            "minimum_score": 0.0,
+            "run_generation": False,
+            "use_llm_judge": False,
+        },
+    )
+
+    assert response.status_code == 422

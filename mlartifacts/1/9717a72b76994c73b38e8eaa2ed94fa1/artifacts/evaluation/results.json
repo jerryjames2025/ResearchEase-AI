@@ -1,0 +1,156 @@
+{
+  "status": "completed",
+  "session_id": "d06758d4-c12f-4d34-8b82-444c35cd4320",
+  "dataset_name": "research-paper-rag-baseline",
+  "mlflow_run_id": "",
+  "mlflow_experiment_name": "ResearchEase-RAG-Evaluation",
+  "case_count": 2,
+  "aggregate_metrics": {
+    "answer_context_overlap": 0.8579458354624425,
+    "answer_keyword_coverage": 0.45,
+    "generation_latency_ms": 14715.894149998348,
+    "mean_retrieved_similarity": 0.20280668884515762,
+    "retrieval_hit_rate_at_k": 1.0,
+    "retrieval_latency_ms": 335.10464999926626,
+    "retrieval_mrr_at_k": 0.3333333333333333,
+    "retrieval_ndcg_at_k": 0.3065735963827292,
+    "retrieval_precision_at_k": 0.2,
+    "retrieval_recall_at_k": 0.5,
+    "retrieved_source_count": 5.0,
+    "top_1_similarity": 0.2213333696126938,
+    "successful_case_ratio": 1.0
+  },
+  "cases": [
+    {
+      "case_id": "methodology",
+      "question": "What methodology does the paper use?",
+      "expected_pages": [
+        2,
+        3
+      ],
+      "expected_answer": "Replace this with the expected methodology summary.",
+      "retrieved_pages": [
+        18,
+        7,
+        2,
+        9,
+        8
+      ],
+      "retrieved_sources": [
+        {
+          "rank": 1,
+          "page_number": 18,
+          "score": 0.14640358090400696,
+          "text": "lesterol\u200b \u200bEducation\u200b \u200bProgram\u200b \u200b(NCEP)\u200b \u200bExpert\u200b \u200bPanel\u200b \u200bon\u200b \u200bDetection,\nEvaluation,\u200b \u200band\u200b \u200bTreatment\u200b \u200bof\u200b \u200bHigh\u200b \u200bBlood\u200b \u200bCholesterol\u200b \u200bin\u200b \u200bAdults\u200b \u200b(Adult\u200b \u200bTreatment\u200b \u200bPanel\u200b \u200bIII)\nfinal\u200b \u200breport.\u200b \u200bCirculation\u200b \u200b106,\u200b \u200b3143\u20133421\u200b \u200b(2002).\n5. D\u2019Agostino,\u200b \u200bR.\u200b \u200bB.,\u200b \u200bSr\u200b \u200bet\u200b\u200bal.\u200b \u200bGeneral\u200b \u200bcardiovascular\u200b \u200brisk\u200b \u200bprofile\u200b \u200bfor\u200b \u200buse\u200b \u200bin\u200b \u200bprimary\u200b \u200bcare:\u200b \u200bthe\nFramingham\u200b \u200bHeart\u200b \u200bStudy.\u200b \u200bCirculation\u200b \u200b117,\u200b \u200b743\u2013753\u200b \u200b(2008)."
+        },
+        {
+          "rank": 2,
+          "page_number": 7,
+          "score": 0.14166422188282013,
+          "text": "ular\u200b \u200brisk\u200b \u200bstratification,\u200b \u200band\nsuggests\u200b \u200bavenues\u200b \u200bof\u200b \u200bfuture\u200b \u200bresearch\u200b \u200binto\u200b \u200bthe\u200b \u200bsource\u200b \u200bof\u200b \u200bthese\u200b \u200bassociations\u200b \u200band\u200b \u200bwhether\u200b \u200bthey\u200b \u200bcan\u200b \u200bbe\nused\u200b \u200bto\u200b \u200bbetter\u200b \u200bunderstand\u200b \u200band\u200b \u200bprevent\u200b \u200bcardiovascular\u200b \u200bdisease.\n\nMETHODS\n\nStudy\u200b \u200bparticipants\n\nWe\u200b \u200bused\u200b \u200btwo\u200b \u200bdatasets\u200b \u200bin\u200b \u200bthis\u200b \u200bstudy.\u200b \u200bThe\u200b \u200bfirst,\u200b \u200bUK\u200b \u200bBiobank,\u200b \u200bis\u200b \u200ban\u200b \u200bobservational\u200b \u200bstudy\u200b \u200bthat\nrecruited\u200b \u200b500,000\u200b \u200bparticipants,\u200b \u200baged\u200b \u200b40-69,\u200b \u200bacross\u200b \u200bthe\u200b \u200bUK\u200b \u200bbetween\u200b \u200b2006\u200b \u200band\u200b \u200b2010.\u200b \u200bEach"
+        },
+        {
+          "rank": 3,
+          "page_number": 2,
+          "score": 0.13542307913303375,
+          "text": "UC).\u200b \u200bWe\u200b \u200bfurther\u200b \u200bshow\u200b \u200bthat\u200b \u200bour\u200b \u200bmodels\u200b \u200bused\u200b \u200bdistinct\u200b \u200baspects\u200b \u200bof\u200b \u200bthe\nanatomy\u200b \u200bto\u200b \u200bgenerate\u200b \u200beach\u200b \u200bprediction,\u200b \u200bsuch\u200b \u200bas\u200b \u200bthe\u200b \u200boptic\u200b \u200bdisc\u200b \u200bor\u200b \u200bblood\u200b \u200bvessels,\u200b \u200bopening\u200b \u200bavenues\u200b \u200bof\nfurther\u200b \u200bresearch.\n\nINTRODUCTION\n\nRisk\u200b \u200bstratification\u200b \u200bis\u200b \u200bkey\u200b \u200bto\u200b \u200bidentifying\u200b \u200band\u200b \u200bmanaging\u200b \u200bgroups\u200b \u200bat\u200b \u200brisk\u200b \u200bfor\u200b \u200bcardiovascular\ndisease,\u200b \u200bwhich\u200b \u200bremains\u200b \u200bthe\u200b \u200bleading\u200b \u200bcause\u200b \u200bof\u200b \u200bdeath\u200b \u200bglobally\u200b1\u200b.\u200b \u200bWhile\u200b \u200bthe\u200b \u200bavailability\u200b \u200bof\ncardiovascular\u200b \u200bdisease\u200b \u200brisk\u200b \u200bcalculators,\u200b \u200bsuch\u200b \u200bas\u200b \u200bthe\u200b \u200bPooled\u200b \u200bCohort\u200b \u200bequations\u200b2\u200b,\u200b \u200bFramingham\u200b3\u20135\nand\u200b \u200bSCORE\u200b6,7\u200b\u200b \u200bis\u200b \u200bfairly\u200b \u200bwidespread,\u200b \u200bthere\u200b \u200bare\u200b \u200bmany\u200b \u200befforts\u200b \u200bto\u200b \u200bimprove\u200b \u200brisk\u200b \u200bpredictions.\nPhenotypic\u200b \u200binformation,\u200b \u200bparticularly\u200b \u200bof\u200b \u200bvascular\u200b \u200bhealth,\u200b \u200bmay\u200b \u200bfurther\u200b \u200brefine/reclassify\u200b \u200brisk\nprediction\u200b \u200bon\u200b \u200ban\u200b \u200bindividual\u200b \u200bbasis.\u200b \u200bCoronary\u200b \u200bartery\u200b \u200bcalcium\u200b8\u200b\u200b \u200bis\u200b \u200bone\u200b \u200bsuch\u200b \u200bexample\u200b \u200bin\u200b \u200bwhich"
+        },
+        {
+          "rank": 4,
+          "page_number": 9,
+          "score": 0.1344859004020691,
+          "text": "and\u200b \u200bOctober\u200b \u200b2015\u200b \u200bwith\u200b \u200bHbA1c\u200b \u200bmeasurements\u200b \u200b(Table\u200b \u200b1).\u200b \u200bThere\u200b \u200bwas\u200b \u200bno\u200b \u200boverlap\u200b \u200bin\u200b \u200bpatients\nbetween\u200b \u200bthe\u200b \u200bEyePACS\u200b \u200bdevelopment\u200b \u200bset\u200b \u200band\u200b \u200bEyePACS-2K\u200b \u200bvalidation\u200b \u200bset.\n\nModel\u200b \u200bdevelopment\nA\u200b \u200bdeep\u200b \u200bneural\u200b \u200bnetwork\u200b \u200bmodel\u200b \u200bis\u200b \u200ba\u200b \u200bsequence\u200b \u200bof\u200b \u200bmathematical\u200b \u200boperations\u200b \u200bapplied\u200b \u200bto\u200b \u200binput,\nsuch\u200b \u200bas\u200b \u200bpixel\u200b \u200bvalues\u200b \u200bin\u200b \u200ban\u200b \u200bimage.\u200b \u200bThere\u200b \u200bcan\u200b \u200bbe\u200b \u200bmillions\u200b \u200bof\u200b \u200bparameters\u200b \u200b(weights)\u200b \u200bin\u200b \u200bthis\nmathematical\u200b \u200bfunction\u200b25\u200b.\u200b \u200bDeep\u200b \u200blearning\u200b \u200bis\u200b \u200bthe\u200b \u200bprocess\u200b \u200bof\u200b \u200blearning\u200b \u200bthe\u200b \u200bright\u200b \u200bparameter\u200b \u200bvalues\n(\u201ctraining\u201d)\u200b \u200bsuch\u200b \u200bthat\u200b \u200bthis\u200b \u200bfunction\u200b \u200bperforms\u200b \u200ba\u200b \u200bgiven\u200b \u200btask.\u200b \u200bFor\u200b \u200bexample,\u200b \u200bthe\u200b \u200bmodel\u200b \u200bcan\u200b \u200boutput\u200b \u200ba\nprediction\u200b \u200bof\u200b \u200binterest\u200b \u200bfrom\u200b \u200bthe\u200b \u200bpixels\u200b \u200bvalues\u200b \u200bin\u200b \u200ba\u200b \u200bfundus\u200b \u200bimage.\u200b \u200bThe\u200b \u200bdevelopment\u200b \u200bdataset\u200b \u200bis\ndivided\u200b \u200binto\u200b \u200btwo\u200b \u200bcomponents:\u200b \u200ba\u200b \u200b\u201ctrain\u201d\u200b \u200bset\u200b \u200band\u200b \u200ba\u200b \u200b\u201ctune\u201d\u200b \u200bset1 .\u200b \u200bDuring\u200b \u200bthe\u200b \u200btraining\u200b \u200bprocess,\u200b \u200bthe\nparameters\u200b \u200bof\u200b \u200bthe\u200b \u200bneural\u200b \u200bnetwork\u200b \u200bare\u200b \u200binitially\u200b \u200bset\u200b \u200bto\u200b \u200brandom\u200b \u200bvalues.\u200b \u200bThen\u200b \u200bfor\u200b \u200beach\u200b \u200bimage,\u200b \u200bthe\nprediction\u200b \u200bgiven\u200b \u200bby\u200b \u200bthe\u200b \u200bmodel\u200b \u200bis\u200b \u200bcompared\u200b \u200bto\u200b \u200bthe\u200b \u200bknown\u200b \u200blabel\u200b \u200bfrom\u200b \u200bthe\u200b \u200btraining\u200b \u200bset\u200b \u200band\nparameters\u200b \u200bof\u200b \u200bthe\u200b \u200bmodel\u200b \u200bare\u200b \u200bthen\u200b \u200bmodified\u200b \u200bslightly\u200b \u200bto\u200b \u200bdecrease\u200b \u200bthe\u200b \u200berror\u200b \u200bon\u200b \u200bthat\u200b \u200bimage\u200b \u200b(stochastic\ngradient\u200b \u200bdescent).\u200b \u200bThis\u200b \u200bprocess\u200b \u200bis\u200b \u200brepeated\u200b \u200bfor\u200b \u200bevery\u200b \u200bimage\u200b \u200bin\u200b \u200bthe\u200b \u200btraining\u200b \u200bset\u200b \u200buntil\u200b \u200bthe\u200b \u200bmodel\n\u2018learns\u2019\u200b \u200bhow\u200b \u200bto\u200b \u200baccurately\u200b \u200bcompute\u200b \u200bthe\u200b \u200blabel\u200b \u200bfrom\u200b \u200bthe\u200b \u200bpixel\u200b \u200bintensities\u200b \u200bof\u200b \u200bthe\u200b \u200bimage\u200b \u200bfor\u200b \u200ball\u200b \u200bimages\nin\u200b \u200bthe\u200b \u200btraining\u200b \u200bset.\u200b \u200bWith\u200b \u200bappropriate\u200b \u200btuning\u200b \u200band\u200b \u200bsufficient\u200b \u200bdata,\u200b \u200bthe\u200b \u200bresult\u200b \u200bis\u200b \u200ba\u200b \u200bmodel\u200b \u200bgeneral\nenough\u200b \u200bto\u200b \u200bpredict\u200b \u200bthe\u200b \u200blabels\u200b \u200b(e.g.,\u200b \u200bcardiovascular\u200b \u200brisk\u200b \u200bfactors)\u200b \u200bon\u200b \u200bnew\u200b \u200bimages.\u200b \u200bIn\u200b \u200b"
+        },
+        {
+          "rank": 5,
+          "page_number": 8,
+          "score": 0.1226041167974472,
+          "text": "participant\u200b \u200bwas\u200b \u200bconsented\u200b \u200band\u200b \u200bwent\u200b \u200bthrough\u200b \u200ba\u200b \u200bseries\u200b \u200bof\u200b \u200bhealth\u200b \u200bmeasurements\u200b \u200band\u200b \u200bquestionnaires.\nEach\u200b \u200bparticipant\u200b \u200balso\u200b \u200bprovided\u200b \u200bblood,\u200b \u200burine\u200b \u200band\u200b \u200bsaliva\u200b \u200bsamples\u200b21\u200b.\u200b \u200bHowever,\u200b \u200bglucose,\u200b \u200bcholesterol\nand\u200b \u200bhemoglobin\u200b \u200bA1c\u200b \u200b(HbA1c)\u200b \u200bmeasurements\u200b \u200bwere\u200b \u200bnot\u200b \u200bavailable\u200b \u200bat\u200b \u200bthe\u200b \u200btime\u200b \u200bof\u200b \u200bthis\u200b \u200bstudy.\u200b \u200bA\u200b \u200btotal\nof\u200b \u200b67,725\u200b \u200bpatients\u200b24\u200b\u200b \u200balso\u200b \u200bsubsequently\u200b \u200bunderwent\u200b \u200bpaired\u200b \u200bretinal\u200b \u200bfundus\u200b \u200band\u200b \u200bOCT\u200b \u200bimaging\u200b \u200busing\u200b \u200ba\nTopcon\u200b \u200b3D\u200b \u200bOCT\u200b \u200b1000\u200b \u200bMk2\u200b \u200b(Topcon\u200b \u200bCorporation,\u200b \u200bTokyo,\u200b \u200bJapan).\u200b \u200bParticipants\u200b \u200bwere\u200b \u200bthen\nfollowed\u200b \u200bfor\u200b \u200bhealth\u200b \u200boutcomes\u200b \u200bsuch\u200b \u200bas\u200b \u200bhospitalizations,\u200b \u200bmortality,\u200b \u200band\u200b \u200bcause\u200b \u200bof\u200b \u200bdeath.\u200b \u200bThe\u200b \u200bstudy\nwas\u200b \u200breviewed\u200b \u200band\u200b \u200bapproved\u200b \u200bby\u200b \u200bthe\u200b \u200bNorth\u200b \u200bWest\u200b \u200bMulti-Centre\u200b \u200bResearch\u200b \u200bEthics\u200b \u200bCommittee.\u200b \u200bWe\ndivided\u200b \u200bthis\u200b \u200bdataset\u200b \u200binto\u200b \u200ba\u200b \u200bdevelopment\u200b \u200bset\u200b \u200bto\u200b \u200bdevelop\u200b \u200bour\u200b \u200bmodels\u200b \u200b(80%)\u200b \u200band\u200b \u200bvalidation\u200b \u200bset\u200b \u200bto\nassess\u200b \u200bour\u200b \u200bmodel\u2019s\u200b \u200bperformance\u200b \u200b(20%).\nThe\u200b \u200bsecond\u200b \u200bdataset,\u200b \u200bEyePACS,\u200b \u200bis\u200b \u200ba\u200b \u200bU.S.-based\u200b \u200bteleretinal\u200b \u200bservices\u200b \u200bprovider\u200b \u200bthat\u200b \u200bprovides\nscreening\u200b \u200bfor\u200b \u200bdiabetic\u200b \u200beye\u200b \u200bdisease\u200b \u200bto\u200b \u200bover\u200b \u200b300\u200b \u200bclinics\u200b \u200bworldwide.\u200b \u200bEyePACS\u200b \u200bimages\u200b \u200bwere\nacquired\u200b \u200bas\u200b \u200ba\u200b \u200bpart\u200b \u200bof\u200b \u200broutine\u200b \u200bclinical\u200b \u200bcare\u200b \u200bfor\u200b \u200bDR\u200b \u200bscreening,\u200b \u200band\u200b \u200bapproximately\u200b \u200b40%\u200b \u200bof\u200b \u200bthe\nimages\u200b \u200bwere\u200b \u200bacquired\u200b \u200bwith\u200b \u200bpupil\u200b \u200bdilation.\u200b \u200bA\u200b \u200bvariety\u200b \u200bof\u200b \u200bcameras\u200b \u200bwere\u200b \u200bused,\u200b \u200bincluding\u200b \u200bCentervue\nDRS,\u200b \u200bOptovue\u200b \u200biCam,\u200b \u200bCanon\u200b \u200bCR1/DGi/CR2,\u200b \u200band\u200b \u200bTopcon\u200b \u200bNW\u200b \u200busing\u200b \u200b45-degree\u200b \u200bfields\u200b \u200bof\u200b \u200bview.\u200b \u200bA\nsubset\u200b \u200bof\u200b \u200bthe\u200b \u200bEyePACS\u200b \u200bclinics\u200b \u200brecorded\u200b \u200bHbA1c\u200b \u200bat\u200b \u200beach\u200b \u200bvisit.\u200b \u200bA\u200bll\u200b \u200bimages\u200b \u200band\u200b \u200bdata\u200b \u200bwere\nde-identified\u200b \u200baccording\u200b \u200bto\u200b \u200bHIPAA\u200b \u200bSafe\u200b \u200bHarbor\u200b \u200bprior\u200b \u200bto\u200b \u200btransfer\u200b \u200bto\u200b \u200bstudy\u200b \u200binvestigators.\u200b \u200bEthics\nr"
+        }
+      ],
+      "answer": "The paper uses a methodology involving two datasets: UK Biobank and EyePACS. The development dataset, which is 80% of the total participants, includes health measurements and questionnaires for 67,725 patients. The validation set, which is 20% of the total participants, assesses the model's performance.\n\nThe models used in this study are deep neural networks that process input data such as pixel values from images to generate predictions on cardiovascular risk factors. The development dataset is divided into a \"train\" set and a \"tune\" set for training purposes. During the training process, parameters of the neural network are initially set randomly but then modified slightly based on comparing model outputs with known labels in the training set until the model learns how to accurately compute labels from pixel intensities of images.\n\nThe study also includes phenotypic information such as coronary artery calcium and HbA1c measurements. The participants were consented, underwent health measurements and questionnaires, provided blood, urine, and saliva samples, and had their retinal fundus and OCT imaging performed using a Topcon 3D OCT 1000 Mk2 (Topcon Corporation, Tokyo, Japan). The study was reviewed and approved by the North West Multi-Centre Research Ethics Committee.",
+      "metrics": {
+        "retrieval_hit_rate_at_k": 1.0,
+        "retrieval_precision_at_k": 0.2,
+        "retrieval_recall_at_k": 0.5,
+        "retrieval_mrr_at_k": 0.3333333333333333,
+        "retrieval_ndcg_at_k": 0.3065735963827292,
+        "top_1_similarity": 0.14640358090400696,
+        "mean_retrieved_similarity": 0.13611617982387542,
+        "retrieved_source_count": 5.0,
+        "retrieval_latency_ms": 445.50310000340687,
+        "generation_latency_ms": 19382.757300001686,
+        "answer_keyword_coverage": 0.4,
+        "answer_context_overlap": 0.8737864077669902
+      },
+      "judge": null,
+      "error": ""
+    },
+    {
+      "case_id": "results",
+      "question": "What are the main findings?",
+      "expected_pages": [
+        5,
+        6
+      ],
+      "expected_answer": "Replace this with the expected findings.",
+      "retrieved_pages": [
+        7,
+        12,
+        5,
+        8,
+        2
+      ],
+      "retrieved_sources": [
+        {
+          "rank": 1,
+          "page_number": 7,
+          "score": 0.2962631583213806,
+          "text": "ular\u200b \u200brisk\u200b \u200bstratification,\u200b \u200band\nsuggests\u200b \u200bavenues\u200b \u200bof\u200b \u200bfuture\u200b \u200bresearch\u200b \u200binto\u200b \u200bthe\u200b \u200bsource\u200b \u200bof\u200b \u200bthese\u200b \u200bassociations\u200b \u200band\u200b \u200bwhether\u200b \u200bthey\u200b \u200bcan\u200b \u200bbe\nused\u200b \u200bto\u200b \u200bbetter\u200b \u200bunderstand\u200b \u200band\u200b \u200bprevent\u200b \u200bcardiovascular\u200b \u200bdisease.\n\nMETHODS\n\nStudy\u200b \u200bparticipants\n\nWe\u200b \u200bused\u200b \u200btwo\u200b \u200bdatasets\u200b \u200bin\u200b \u200bthis\u200b \u200bstudy.\u200b \u200bThe\u200b \u200bfirst,\u200b \u200bUK\u200b \u200bBiobank,\u200b \u200bis\u200b \u200ban\u200b \u200bobservational\u200b \u200bstudy\u200b \u200bthat\nrecruited\u200b \u200b500,000\u200b \u200bparticipants,\u200b \u200baged\u200b \u200b40-69,\u200b \u200bacross\u200b \u200bthe\u200b \u200bUK\u200b \u200bbetween\u200b \u200b2006\u200b \u200band\u200b \u200b2010.\u200b \u200bEach"
+        },
+        {
+          "rank": 2,
+          "page_number": 12,
+          "score": 0.2819761335849762,
+          "text": "From\u200b \u200bEyePACS:\u200b \u200bJorge\u200b \u200bCuadros,\u200b \u200bOD,\u200b \u200bPhD\n\nThis\u200b \u200bresearch\u200b \u200bhas\u200b \u200bbeen\u200b \u200bconducted\u200b \u200busing\u200b \u200bthe\u200b \u200bUK\u200b \u200bBiobank\u200b \u200bResource\u200b \u200bunder\u200b \u200bApplication\u200b \u200bNumber\n\n17643.\n\nTables\u200b \u200b&\u200b \u200bFigures\n\nDevelopment\u200b \u200bSet Clinical\u200b \u200bValidation\u200b \u200bSet\nCharacteristics UK\u200b \u200bBiobank EyePACS UK\u200b \u200bBiobank EyePACS-2K\nNumber\u200b \u200bof\u200b \u200bPatients 48,101 236,234 12,026 999\nNumber\u200b \u200bof\u200b \u200bImages 96,082 1,682,938 24,008 1,958\nAge:\u200b \u200bMean,\u200b \u200byears 56.8\u200b \u200b(8.2) 53.6\u200b \u200b(11.6) 56.9\u200b \u200b(8.2) 54.9\u200b \u200b(10.9)\n(SD)\n\nGender\u200b \u200b(%\u200b \u200bmale) 44.9 39.2 44.9 39.2\nEthnicity 1.2%\u200b \u200bBlack, 4.9%\u200b \u200bBlack, 1.3%\u200b \u200bBlack, 6.4%\u200b \u200bBlack,\n3.4%\u200b \u200bAsian/PI, 5.5%\u200b \u200bAsian/PI, 3.6%\u200b \u200bAsian/PI, 5.7%\u200b \u200bAsian/PI,\n90.6%\u200b \u200bWhite, 7.7%\u200b \u200bWhite, 90.1%\u200b \u200bWhite, 11.3%\u200b \u200bWhite,\n4.1%\u200b \u200bOther 58.1%\u200b \u200bHispanic, 4.2%\u200b \u200bOther 57.2%\u200b \u200bHispanic,\n1.2%\u200b \u200bNative\u200b \u200bAm, 0.7%\u200b \u200bNative\u200b \u200bAm,\n1.7%\u200b \u200bOther 2%\u200b \u200bOther\nBMI:\u200b \u200bMean\u200b \u200b(SD) 27.31\u200b \u200b(4.78) n/a 27.37\u200b \u200b(4.79) n/a\nSystolic\u200b \u200bBP:\u200b \u200bMean, 136.82\u200b \u200b(18.41) n/a 136.89\u200b \u200b(18.3) n/a\nmmHg\u200b \u200b(SD)\nDiastolic\u200b \u200bBP:\u200b \u200bMean, 81.78\u200b \u200b(10.08) n/a 81.76\u200b \u200b(9.87) n/a\nmmHg\u200b \u200b(SD)\nHbA1c:\u200b \u200bMean,\u200b \u200b% n/a 8.23\u200b \u200b(2.14) n/a 8.2\u200b \u200b(2.13)\n(SD)\n\nCurrent\u200b \u200bSmoker:\u200b \u200b% 9.53% n/a 9.87% n/a\n\nTable\u200b \u200b1\u200b.\u200b \u200bBaseline\u200b \u200bcharacteristics\u200b \u200bof\u200b \u200bpatients\u200b \u200bin\u200b \u200bthe\u200b \u200bdevelopment\u200b \u200band\u200b \u200bvalidation\u200b \u200bsets"
+        },
+        {
+          "rank": 3,
+          "page_number": 5,
+          "score": 0.2615550458431244,
+          "text": "\u200bpredict\u200b \u200bthe\u200b \u200bonset\u200b \u200bof\u200b \u200bmajor\u200b \u200badverse\ncardiovascular\u200b \u200bevents\u200b \u200b(MACE)\u200b \u200bwithin\u200b \u200b5\u200b \u200byears.\u200b \u200bThis\u200b \u200boutcome\u200b \u200bwas\u200b \u200bavailable\u200b \u200bonly\u200b \u200bfor\u200b \u200bone\u200b \u200bof\u200b \u200bour\ndatasets,\u200b \u200bthe\u200b \u200bUK\u200b \u200bBiobank.\u200b \u200bBecause\u200b \u200bthe\u200b \u200bUK\u200b \u200bBiobank\u200b \u200bis\u200b \u200ba\u200b \u200bfairly\u200b \u200brecent\u200b \u200bstudy\u200b \u200bthat\u200b \u200brecruited\nrelatively\u200b \u200bhealthy\u200b \u200bparticipants,\u200b \u200bMACE\u200b \u200bwere\u200b \u200brare\u200b \u200b(631\u200b \u200bevents\u200b \u200boccurred\u200b \u200bwithin\u200b \u200b5\u200b \u200byears\u200b \u200bof\u200b \u200bretinal\nimaging--150\u200b \u200bof\u200b \u200bwhich\u200b \u200bwere\u200b \u200bin\u200b \u200bthe\u200b \u200bclinical\u200b \u200bvalidation\u200b \u200bset).\u200b \u200bDespite\u200b \u200bthe\u200b \u200blimited\u200b \u200bnumber\u200b \u200bof\u200b \u200bevents,\nour\u200b \u200bmodel\u200b \u200bachieved\u200b \u200ban\u200b \u200bAUC\u200b \u200bof\u200b \u200b0.70\u200b \u200b(95%\u200b \u200bCI:\u200b \u200b0.648,\u200b \u200b0.740)\u200b \u200bfrom\u200b \u200bretinal\u200b \u200bfundus\u200b \u200bimages\u200b \u200balone,\ncomparable\u200b \u200bto\u200b \u200bthe\u200b \u200bAUC\u200b \u200bof\u200b \u200b0.72\u200b \u200b(0.67,\u200b \u200b0.76)\u200b \u200bfor\u200b \u200bthe\u200b \u200bEuropean\u200b \u200bSCORE\u200b \u200brisk\u200b \u200bcalculator\u200b \u200b(Table\u200b \u200b3).\nNext,\u200b \u200bwe\u200b \u200bused\u200b \u200bsoft\u200b \u200battention\u200b \u200b(see\u200b \u200bMethods)\u200b \u200bto\u200b \u200bidentify\u200b \u200bthe\u200b \u200banatomical\u200b \u200bregions\u200b \u200bthat\u200b \u200bthe\nalgorithm\u200b \u200bmight\u200b \u200bhave\u200b \u200bbeen\u200b \u200busing\u200b \u200bto\u200b \u200bmake\u200b \u200bits\u200b \u200bpredictions.\u200b \u200bA\u200b \u200brepresentative\u200b \u200bexample\u200b \u200bof\u200b \u200ba\u200b \u200bsingle"
+        },
+        {
+          "rank": 4,
+          "page_number": 8,
+          "score": 0.25722265243530273,
+          "text": "participant\u200b \u200bwas\u200b \u200bconsented\u200b \u200band\u200b \u200bwent\u200b \u200bthrough\u200b \u200ba\u200b \u200bseries\u200b \u200bof\u200b \u200bhealth\u200b \u200bmeasurements\u200b \u200band\u200b \u200bquestionnaires.\nEach\u200b \u200bparticipant\u200b \u200balso\u200b \u200bprovided\u200b \u200bblood,\u200b \u200burine\u200b \u200band\u200b \u200bsaliva\u200b \u200bsamples\u200b21\u200b.\u200b \u200bHowever,\u200b \u200bglucose,\u200b \u200bcholesterol\nand\u200b \u200bhemoglobin\u200b \u200bA1c\u200b \u200b(HbA1c)\u200b \u200bmeasurements\u200b \u200bwere\u200b \u200bnot\u200b \u200bavailable\u200b \u200bat\u200b \u200bthe\u200b \u200btime\u200b \u200bof\u200b \u200bthis\u200b \u200bstudy.\u200b \u200bA\u200b \u200btotal\nof\u200b \u200b67,725\u200b \u200bpatients\u200b24\u200b\u200b \u200balso\u200b \u200bsubsequently\u200b \u200bunderwent\u200b \u200bpaired\u200b \u200bretinal\u200b \u200bfundus\u200b \u200band\u200b \u200bOCT\u200b \u200bimaging\u200b \u200busing\u200b \u200ba\nTopcon\u200b \u200b3D\u200b \u200bOCT\u200b \u200b1000\u200b \u200bMk2\u200b \u200b(Topcon\u200b \u200bCorporation,\u200b \u200bTokyo,\u200b \u200bJapan).\u200b \u200bParticipants\u200b \u200bwere\u200b \u200bthen\nfollowed\u200b \u200bfor\u200b \u200bhealth\u200b \u200boutcomes\u200b \u200bsuch\u200b \u200bas\u200b \u200bhospitalizations,\u200b \u200bmortality,\u200b \u200band\u200b \u200bcause\u200b \u200bof\u200b \u200bdeath.\u200b \u200bThe\u200b \u200bstudy\nwas\u200b \u200breviewed\u200b \u200band\u200b \u200bapproved\u200b \u200bby\u200b \u200bthe\u200b \u200bNorth\u200b \u200bWest\u200b \u200bMulti-Centre\u200b \u200bResearch\u200b \u200bEthics\u200b \u200bCommittee.\u200b \u200bWe\ndivided\u200b \u200bthis\u200b \u200bdataset\u200b \u200binto\u200b \u200ba\u200b \u200bdevelopment\u200b \u200bset\u200b \u200bto\u200b \u200bdevelop\u200b \u200bour\u200b \u200bmodels\u200b \u200b(80%)\u200b \u200band\u200b \u200bvalidation\u200b \u200bset\u200b \u200bto\nassess\u200b \u200bour\u200b \u200bmodel\u2019s\u200b \u200bperformance\u200b \u200b(20%).\nThe\u200b \u200bsecond\u200b \u200bdataset,\u200b \u200bEyePACS,\u200b \u200bis\u200b \u200ba\u200b \u200bU.S.-based\u200b \u200bteleretinal\u200b \u200bservices\u200b \u200bprovider\u200b \u200bthat\u200b \u200bprovides\nscreening\u200b \u200bfor\u200b \u200bdiabetic\u200b \u200beye\u200b \u200bdisease\u200b \u200bto\u200b \u200bover\u200b \u200b300\u200b \u200bclinics\u200b \u200bworldwide.\u200b \u200bEyePACS\u200b \u200bimages\u200b \u200bwere\nacquired\u200b \u200bas\u200b \u200ba\u200b \u200bpart\u200b \u200bof\u200b \u200broutine\u200b \u200bclinical\u200b \u200bcare\u200b \u200bfor\u200b \u200bDR\u200b \u200bscreening,\u200b \u200band\u200b \u200bapproximately\u200b \u200b40%\u200b \u200bof\u200b \u200bthe\nimages\u200b \u200bwere\u200b \u200bacquired\u200b \u200bwith\u200b \u200bpupil\u200b \u200bdilation.\u200b \u200bA\u200b \u200bvariety\u200b \u200bof\u200b \u200bcameras\u200b \u200bwere\u200b \u200bused,\u200b \u200bincluding\u200b \u200bCentervue\nDRS,\u200b \u200bOptovue\u200b \u200biCam,\u200b \u200bCanon\u200b \u200bCR1/DGi/CR2,\u200b \u200band\u200b \u200bTopcon\u200b \u200bNW\u200b \u200busing\u200b \u200b45-degree\u200b \u200bfields\u200b \u200bof\u200b \u200bview.\u200b \u200bA\nsubset\u200b \u200bof\u200b \u200bthe\u200b \u200bEyePACS\u200b \u200bclinics\u200b \u200brecorded\u200b \u200bHbA1c\u200b \u200bat\u200b \u200beach\u200b \u200bvisit.\u200b \u200bA\u200bll\u200b \u200bimages\u200b \u200band\u200b \u200bdata\u200b \u200bwere\nde-identified\u200b \u200baccording\u200b \u200bto\u200b \u200bHIPAA\u200b \u200bSafe\u200b \u200bHarbor\u200b \u200bprior\u200b \u200bto\u200b \u200btransfer\u200b \u200bto\u200b \u200bstudy\u200b \u200binvestigators.\u200b \u200bEthics\nr"
+        },
+        {
+          "rank": 5,
+          "page_number": 2,
+          "score": 0.25046899914741516,
+          "text": "UC).\u200b \u200bWe\u200b \u200bfurther\u200b \u200bshow\u200b \u200bthat\u200b \u200bour\u200b \u200bmodels\u200b \u200bused\u200b \u200bdistinct\u200b \u200baspects\u200b \u200bof\u200b \u200bthe\nanatomy\u200b \u200bto\u200b \u200bgenerate\u200b \u200beach\u200b \u200bprediction,\u200b \u200bsuch\u200b \u200bas\u200b \u200bthe\u200b \u200boptic\u200b \u200bdisc\u200b \u200bor\u200b \u200bblood\u200b \u200bvessels,\u200b \u200bopening\u200b \u200bavenues\u200b \u200bof\nfurther\u200b \u200bresearch.\n\nINTRODUCTION\n\nRisk\u200b \u200bstratification\u200b \u200bis\u200b \u200bkey\u200b \u200bto\u200b \u200bidentifying\u200b \u200band\u200b \u200bmanaging\u200b \u200bgroups\u200b \u200bat\u200b \u200brisk\u200b \u200bfor\u200b \u200bcardiovascular\ndisease,\u200b \u200bwhich\u200b \u200bremains\u200b \u200bthe\u200b \u200bleading\u200b \u200bcause\u200b \u200bof\u200b \u200bdeath\u200b \u200bglobally\u200b1\u200b.\u200b \u200bWhile\u200b \u200bthe\u200b \u200bavailability\u200b \u200bof\ncardiovascular\u200b \u200bdisease\u200b \u200brisk\u200b \u200bcalculators,\u200b \u200bsuch\u200b \u200bas\u200b \u200bthe\u200b \u200bPooled\u200b \u200bCohort\u200b \u200bequations\u200b2\u200b,\u200b \u200bFramingham\u200b3\u20135\nand\u200b \u200bSCORE\u200b6,7\u200b\u200b \u200bis\u200b \u200bfairly\u200b \u200bwidespread,\u200b \u200bthere\u200b \u200bare\u200b \u200bmany\u200b \u200befforts\u200b \u200bto\u200b \u200bimprove\u200b \u200brisk\u200b \u200bpredictions.\nPhenotypic\u200b \u200binformation,\u200b \u200bparticularly\u200b \u200bof\u200b \u200bvascular\u200b \u200bhealth,\u200b \u200bmay\u200b \u200bfurther\u200b \u200brefine/reclassify\u200b \u200brisk\nprediction\u200b \u200bon\u200b \u200ban\u200b \u200bindividual\u200b \u200bbasis.\u200b \u200bCoronary\u200b \u200bartery\u200b \u200bcalcium\u200b8\u200b\u200b \u200bis\u200b \u200bone\u200b \u200bsuch\u200b \u200bexample\u200b \u200bin\u200b \u200bwhich"
+        }
+      ],
+      "answer": "The main findings of the research are:\n\n1. The study used two datasets: UK Biobank and EyePACS.\n2. The development set included 48,101 participants from the UK Biobank with a mean age of 56.8 years (SD = 8.2) and a BMI of 27.31 (SD = 4.78).\n3. The validation set consisted of 236,234 participants from EyePACS.\n4. The models developed used distinct anatomical regions to generate predictions, such as the optic disc or blood vessels.\n5. The models achieved an AUC of 0.70 (95% CI: 0.648, 0.740) for retinal fundus images alone, comparable to the AUC of 0.72 (0.67, 0.76) for the European SCORE risk calculator.\n6. The models identified anatomical regions that might have been used by the algorithm to make predictions.\n7. The study showed that phenotypic information, particularly vascular health, can further refine and reclassify risk prediction on an individual basis.\n\nThese findings suggest that using distinct anatomical regions in models for cardiovascular disease risk stratification could lead to improved understanding and prevention of cardiovascular diseases.",
+      "metrics": {
+        "retrieval_hit_rate_at_k": 1.0,
+        "retrieval_precision_at_k": 0.2,
+        "retrieval_recall_at_k": 0.5,
+        "retrieval_mrr_at_k": 0.3333333333333333,
+        "retrieval_ndcg_at_k": 0.3065735963827292,
+        "top_1_similarity": 0.2962631583213806,
+        "mean_retrieved_similarity": 0.26949719786643983,
+        "retrieved_source_count": 5.0,
+        "retrieval_latency_ms": 224.70619999512564,
+        "generation_latency_ms": 10049.030999995011,
+        "answer_keyword_coverage": 0.5,
+        "answer_context_overlap": 0.8421052631578947
+      },
+      "judge": null,
+      "error": ""
+    }
+  ],
+  "warnings": []
+}

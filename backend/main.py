@@ -12,6 +12,18 @@ from fastapi.exceptions import (
 from fastapi.middleware.cors import (
     CORSMiddleware,
 )
+from backend.routers import (
+    chat,
+    evaluation,
+    health,
+    literature,
+    llm,
+    mathematics,
+    papers,
+    research,
+    storage,
+    vector,
+)
 
 from backend.core.errors import (
     APIError,
@@ -201,6 +213,10 @@ def root() -> dict[str, str]:
         "vector_providers": (
             f"{settings.api_prefix}"
             "/vector/providers"),
+        "evaluation_health": (
+            f"{settings.api_prefix}"
+            "/evaluation/health"
+),
     }
 
 
@@ -224,7 +240,10 @@ app.include_router(
     vector.router,
     prefix=api_prefix,
 )
-
+app.include_router(
+    evaluation.router,
+    prefix=api_prefix,
+)
 app.include_router(
     papers.router,
     prefix=api_prefix,

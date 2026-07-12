@@ -9,3 +9,6 @@ uploads/
 data/faiss/
 __pycache__/
 .pytest_cache/
+# MLflow runtime data
+data/mlflow/
+data/evaluations/

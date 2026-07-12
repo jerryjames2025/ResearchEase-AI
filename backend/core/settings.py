@@ -16,11 +16,39 @@ class APISettings(BaseSettings):
     """
 
     app_name: str = "ResearchEase AI API"
-    api_version: str = "10.0.0"
+    api_version: str = "11.0.0"
     api_prefix: str = "/api/v1"
 
     debug: bool = True
     max_upload_mb: int = 50
+    
+     
+    # -----------------------------------------------------
+# Version 11: MLflow and RAG evaluation
+# -----------------------------------------------------
+
+    mlflow_tracking_uri: str = (
+    "http://127.0.0.1:5000"
+)
+
+    mlflow_experiment_name: str = (
+    "ResearchEase-RAG-Evaluation"
+)
+
+    mlflow_request_timeout_seconds: int = 5
+
+    evaluation_max_cases: int = 50
+
+    evaluation_default_top_k: int = 5
+
+    evaluation_judge_temperature: float = 0.0
+
+    model_config = SettingsConfigDict(
+        env_prefix="RESEARCHEASE_",
+        env_file=".env",
+        env_file_encoding="utf-8",
+        extra="ignore",
+    )
 
     cors_origins: str = (
         "http://localhost:8501,"
@@ -103,6 +131,30 @@ class APISettings(BaseSettings):
 
     pinecone_freshness_timeout_seconds: int = 45
 
+
+    # -----------------------------------------------------
+# Version 11: MLflow and RAG evaluation
+# -----------------------------------------------------
+
+    mlflow_tracking_uri: str = (
+    "sqlite:///data/mlflow/mlflow.db"
+)
+
+    mlflow_experiment_name: str = (
+    "ResearchEase-RAG-Evaluation"
+)
+
+    mlflow_artifact_directory: Path = Path(
+    "data/mlflow/artifacts"
+)
+
+    mlflow_ui_url: str = (
+    "http://127.0.0.1:5000"
+)
+
+    evaluation_directory: Path = Path(
+    "data/evaluations"
+)
     # -----------------------------------------------------
     # External academic APIs
     # -----------------------------------------------------
@@ -172,13 +224,7 @@ class APISettings(BaseSettings):
         "ollama,google,openai,"
         "anthropic,huggingface"
     )
-
-    model_config = SettingsConfigDict(
-        env_prefix="RESEARCHEASE_",
-        env_file=".env",
-        env_file_encoding="utf-8",
-        extra="ignore",
-    )
+   
 
     @property
     def allowed_origins(

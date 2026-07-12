@@ -4,6 +4,7 @@ import json
 import os
 
 import streamlit as st
+from frontend.evaluation_panel import (render_evaluation_panel,)
 
 from config import DEFAULT_EMBEDDING_MODEL
 from frontend.api_client import (
@@ -16,12 +17,12 @@ from frontend.vector_controls import (
 
 
 st.set_page_config(
-    page_title="ResearchEase AI — Version 10",
+    page_title="ResearchEase AI — Version 11",
     page_icon="📚",
     layout="wide",
 )
 
-st.title("📚 ResearchEase AI — Version 10")
+st.title("📚 ResearchEase AI — Version 11")
 
 st.caption(
     "FastAPI-powered research assistant with persistent storage, "
@@ -39,6 +40,7 @@ SESSION_DEFAULTS = {
     "math_result": {},
     "literature_result": {},
     "available_sessions": [],
+    "evaluation_result": {},
 }
 
 for key, value in SESSION_DEFAULTS.items():
@@ -608,6 +610,7 @@ if index_metadata.get(
     research_tab,
     math_tab,
     literature_tab,
+    evaluation_tab,
 ) = st.tabs(
     [
         "Paper",
@@ -615,6 +618,7 @@ if index_metadata.get(
         "External Research",
         "Math",
         "Literature Review",
+        "RAG Evaluation",
     ]
 )
 
@@ -1208,3 +1212,16 @@ with literature_tab:
             ),
             mime="application/json",
         )
+# ---------------------------------------------------------
+# Version 11 RAG evaluation tab
+# ---------------------------------------------------------
+
+with evaluation_tab:
+    render_evaluation_panel(
+        api=api,
+        session_id=session_id,
+        ollama_model=ollama_model,
+        explanation_level=(
+            explanation_level
+        ),
+    )

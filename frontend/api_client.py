@@ -42,6 +42,60 @@ class ResearchEaseAPI:
             enable_fallback
         )
         
+    def evaluation_health(
+    self,
+) -> dict:
+        return self._request(
+        "GET",
+        "/api/v1/evaluation/health",
+    )
+
+
+    def evaluation_template(
+    self,
+) -> dict:
+        return self._request(
+        "GET",
+        "/api/v1/evaluation/template",
+    )
+
+
+    def run_rag_evaluation(
+    self,
+    payload: dict,
+) -> dict:
+        return self._request(
+        "POST",
+        "/api/v1/evaluation/run",
+        json=payload,
+    )
+
+
+    def evaluation_runs(
+    self,
+    limit: int = 30,
+) -> dict:
+        return self._request(
+        "GET",
+        (
+            "/api/v1/evaluation/runs"
+            f"?limit={limit}"
+        ),
+    )
+
+
+    def evaluation_run(
+    self,
+    run_id: str,
+) -> dict:
+        return self._request(
+        "GET",
+        (
+            "/api/v1/evaluation/runs/"
+            f"{run_id}"
+        ),
+    )
+        
     def vector_providers(
     self,
 ) -> dict:

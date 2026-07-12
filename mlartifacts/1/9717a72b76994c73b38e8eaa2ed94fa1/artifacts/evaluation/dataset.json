@@ -1,0 +1,30 @@
+{
+  "dataset_name": "research-paper-rag-baseline",
+  "session_id": "d06758d4-c12f-4d34-8b82-444c35cd4320",
+  "cases": [
+    {
+      "case_id": "methodology",
+      "question": "What methodology does the paper use?",
+      "expected_pages": [
+        2,
+        3
+      ],
+      "expected_answer": "Replace this with the expected methodology summary.",
+      "tags": {
+        "category": "methodology"
+      }
+    },
+    {
+      "case_id": "results",
+      "question": "What are the main findings?",
+      "expected_pages": [
+        5,
+        6
+      ],
+      "expected_answer": "Replace this with the expected findings.",
+      "tags": {
+        "category": "results"
+      }
+    }
+  ]
+}
