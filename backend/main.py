@@ -1,6 +1,8 @@
 from __future__ import annotations
 
-from contextlib import asynccontextmanager
+from contextlib import (
+    asynccontextmanager,
+)
 import logging
 
 from fastapi import FastAPI
@@ -24,9 +26,20 @@ from backend.routers import (
     chat,
     health,
     literature,
+    llm,
     mathematics,
     papers,
     research,
+    storage,
+)
+from backend.storage.health import (
+    storage_health,
+)
+from backend.storage.mongo import (
+    initialize_mongo,
+)
+from backend.storage.postgres import (
+    create_tables,
 )
 
 
@@ -49,15 +62,61 @@ settings = get_settings()
 async def lifespan(
     app: FastAPI,
 ):
-    """
-    Handle API startup and shutdown events.
-    """
-
     logger.info(
         "Starting %s version %s",
         settings.app_name,
         settings.api_version,
     )
+
+    settings.faiss_directory.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
+
+    try:
+        if settings.auto_create_tables:
+            create_tables()
+
+        initialize_mongo()
+
+        status = storage_health()
+
+        for (
+            service_name,
+            service_status,
+        ) in status[
+            "services"
+        ].items():
+            logger.info(
+                "Storage %s: %s - %s",
+                service_name,
+                (
+                    "healthy"
+                    if service_status[
+                        "healthy"
+                    ]
+                    else "unavailable"
+                ),
+                service_status["detail"],
+            )
+
+        if (
+            settings.strict_storage_startup
+            and status["status"]
+            != "healthy"
+        ):
+            raise RuntimeError(
+                "One or more required storage "
+                "services are unavailable."
+            )
+
+    except Exception:
+        logger.exception(
+            "Storage initialization failed."
+        )
+
+        if settings.strict_storage_startup:
+            raise
 
     yield
 
@@ -71,9 +130,9 @@ app = FastAPI(
     title=settings.app_name,
     version=settings.api_version,
     description=(
-        "REST API for research-paper analysis, "
-        "citation-grounded RAG, external academic "
-        "search, mathematical explanation, and "
+        "Persistent multi-provider REST API for "
+        "research-paper analysis, RAG, external "
+        "research, mathematical explanation and "
         "literature-review generation."
     ),
     docs_url="/docs",
@@ -119,6 +178,14 @@ def root() -> dict[str, str]:
         "name": settings.app_name,
         "version": settings.api_version,
         "documentation": "/docs",
+        "storage_health": (
+            f"{settings.api_prefix}"
+            "/storage/health"
+        ),
+        "llm_providers": (
+            f"{settings.api_prefix}"
+            "/llm/providers"
+        ),
     }
 
 
@@ -126,6 +193,16 @@ api_prefix = settings.api_prefix
 
 app.include_router(
     health.router,
+    prefix=api_prefix,
+)
+
+app.include_router(
+    storage.router,
+    prefix=api_prefix,
+)
+
+app.include_router(
+    llm.router,
     prefix=api_prefix,
 )
 

@@ -42,6 +42,7 @@ SESSION_DEFAULTS = {
     "research_results": [],
     "math_result": {},
     "literature_result": {},
+    "available_sessions": [],
 }
 
 for key, value in (
@@ -53,10 +54,12 @@ for key, value in (
         ] = value
 
 
+# ---------------------------------------------------------
+# Sidebar configuration
+# ---------------------------------------------------------
+
 with st.sidebar:
-    st.header(
-        "Backend"
-    )
+    st.header("Backend")
 
     api_url = st.text_input(
         "FastAPI URL",
@@ -66,16 +69,48 @@ with st.sidebar:
         ),
     )
 
-    ollama_model = st.text_input(
-        "Ollama model",
-        value=DEFAULT_OLLAMA_MODEL,
+    llm_provider = st.selectbox(
+        "LLM provider",
+        [
+            "ollama",
+            "google",
+            "openai",
+            "anthropic",
+            "huggingface",
+        ],
+    )
+
+    provider_default_models = {
+        "ollama": "qwen2.5:1.5b",
+        "google": "gemini-2.5-flash",
+        "openai": "gpt-5.4-mini",
+        "anthropic": "claude-sonnet-5",
+        "huggingface": (
+            "microsoft/"
+            "Phi-3-mini-4k-instruct"
+        ),
+    }
+
+    llm_model = st.text_input(
+        "LLM model",
+        value=provider_default_models[
+            llm_provider
+        ],
+        key=f"llm_model_{llm_provider}",
+    )
+
+    enable_llm_fallback = st.checkbox(
+        "Enable automatic provider fallback",
+        value=True,
+        help=(
+            "When the selected provider fails, "
+            "ResearchEase tries another configured provider."
+        ),
     )
 
     embedding_model = st.text_input(
         "Embedding model",
-        value=(
-            DEFAULT_EMBEDDING_MODEL
-        ),
+        value=DEFAULT_EMBEDDING_MODEL,
     )
 
     embedding_device = st.selectbox(
@@ -98,9 +133,401 @@ with st.sidebar:
     )
 
 
+# Existing request bodies still use this variable name.
+ollama_model = llm_model
+
+
+# ---------------------------------------------------------
+# Create API client BEFORE calling api methods
+# ---------------------------------------------------------
+
 api = ResearchEaseAPI(
-    api_url
+    base_url=api_url,
+    llm_provider=llm_provider,
+    llm_model=llm_model,
+    enable_fallback=enable_llm_fallback,
 )
+
+
+# ---------------------------------------------------------
+# Version 9: LLM provider status and testing
+# ---------------------------------------------------------
+
+with st.sidebar:
+    st.header("LLM provider status")
+
+    try:
+        provider_result = api.llm_providers()
+
+        for provider_info in provider_result.get(
+            "providers",
+            [],
+        ):
+            label = provider_info.get(
+                "provider",
+                "unknown",
+            )
+
+            configured = bool(
+                provider_info.get(
+                    "configured",
+                    False,
+                )
+            )
+
+            installed = bool(
+                provider_info.get(
+                    "installed",
+                    False,
+                )
+            )
+
+            detail = provider_info.get(
+                "detail",
+                "",
+            )
+
+            if configured:
+                st.info(
+                    f"{label}: configured"
+                )
+
+            elif installed:
+                st.caption(
+                    f"{label}: {detail}"
+                )
+
+            else:
+                st.warning(
+                    f"{label}: {detail}"
+                )
+
+        if st.button(
+            "Test selected LLM",
+            use_container_width=True,
+        ):
+            try:
+                with st.spinner(
+                    "Testing the selected LLM provider..."
+                ):
+                    test_result = (
+                        api.test_llm_provider(
+                            provider=llm_provider,
+                            model=llm_model,
+                            enable_fallback=(
+                                enable_llm_fallback
+                            ),
+                        )
+                    )
+
+                actual_provider = (
+                    test_result.get(
+                        "actual_provider",
+                        llm_provider,
+                    )
+                )
+
+                actual_model = (
+                    test_result.get(
+                        "actual_model",
+                        llm_model,
+                    )
+                )
+
+                st.success(
+                    "LLM test successful."
+                )
+
+                st.write(
+                    "**Actual provider:**",
+                    actual_provider,
+                )
+
+                st.write(
+                    "**Actual model:**",
+                    actual_model,
+                )
+
+                if test_result.get(
+                    "fallback_used",
+                    False,
+                ):
+                    st.warning(
+                        "The primary provider failed, "
+                        "so an automatic fallback was used."
+                    )
+
+                response_text = (
+                    test_result.get(
+                        "response",
+                        "",
+                    )
+                )
+
+                if response_text:
+                    st.write(
+                        response_text
+                    )
+
+            except APIClientError as exc:
+                st.error(
+                    str(exc)
+                )
+
+    except APIClientError as exc:
+        st.warning(
+            "Unable to load LLM provider status."
+        )
+
+        st.caption(
+            str(exc)
+        )
+
+with st.sidebar:
+    st.header(
+        "Persistent storage"
+    )
+
+    try:
+        storage_status = (
+            api.storage_health()
+        )
+
+        if (
+            storage_status["status"]
+            == "healthy"
+        ):
+            st.success(
+                "PostgreSQL, MongoDB, "
+                "Redis and FAISS storage "
+                "are ready."
+            )
+
+        else:
+            st.warning(
+                "One or more storage "
+                "services are unavailable."
+            )
+
+        with st.expander(
+            "View storage services"
+        ):
+            for (
+                service_name,
+                service_status,
+            ) in storage_status[
+                "services"
+            ].items():
+
+                if service_status[
+                    "healthy"
+                ]:
+                    st.success(
+                        (
+                            f"{service_name}: "
+                            f"{service_status['detail']}"
+                        )
+                    )
+
+                else:
+                    st.error(
+                        (
+                            f"{service_name}: "
+                            f"{service_status['detail']}"
+                        )
+                    )
+
+    except APIClientError as exc:
+        st.error(
+            str(exc)
+        )
+
+    if st.button(
+        "Refresh saved sessions",
+        use_container_width=True,
+    ):
+        try:
+            result = (
+                api.list_sessions()
+            )
+
+            st.session_state[
+                "available_sessions"
+            ] = result[
+                "sessions"
+            ]
+
+        except APIClientError as exc:
+            st.error(
+                str(exc)
+            )
+
+    saved_sessions = (
+        st.session_state[
+            "available_sessions"
+        ]
+    )
+
+    session_options = {
+        (
+            f"{item['filename']} | "
+            f"{item['session_id'][:8]} | "
+            f"{item['updated_at'][:19]}"
+        ): item
+        for item in saved_sessions
+    }
+
+    selected_session_label = (
+        st.selectbox(
+            "Saved research sessions",
+            options=[
+                "",
+                *session_options.keys(),
+            ],
+        )
+    )
+
+    if st.button(
+        "Load saved session",
+        use_container_width=True,
+        disabled=(
+            not selected_session_label
+        ),
+    ):
+        try:
+            selected = (
+                session_options[
+                    selected_session_label
+                ]
+            )
+
+            session_id_to_load = (
+                selected[
+                    "session_id"
+                ]
+            )
+
+            session_data = (
+                api.get_session(
+                    session_id_to_load
+                )
+            )
+
+            st.session_state[
+                "api_session_id"
+            ] = session_id_to_load
+
+            st.session_state[
+                "paper_metadata"
+            ] = {
+                "session_id": (
+                    session_id_to_load
+                ),
+                "filename": (
+                    session_data[
+                        "filename"
+                    ]
+                ),
+                "page_count": (
+                    session_data[
+                        "page_count"
+                    ]
+                ),
+                "extracted_characters": (
+                    session_data[
+                        "extracted_characters"
+                    ]
+                ),
+                "created_at": (
+                    session_data[
+                        "created_at"
+                    ]
+                ),
+            }
+
+            st.session_state[
+                "index_metadata"
+            ] = {
+                "chunk_count": (
+                    session_data[
+                        "chunk_count"
+                    ]
+                ),
+                "index_ready": (
+                    session_data[
+                        "index_ready"
+                    ]
+                ),
+            }
+
+            st.session_state[
+                "analysis"
+            ] = ""
+
+            if session_data[
+                "analysis_ready"
+            ]:
+                analysis_result = (
+                    api.get_analysis(
+                        session_id_to_load
+                    )
+                )
+
+                st.session_state[
+                    "analysis"
+                ] = analysis_result[
+                    "analysis"
+                ]
+
+            history_result = (
+                api.chat_history(
+                    session_id_to_load
+                )
+            )
+
+            st.session_state[
+                "chat_history"
+            ] = [
+                {
+                    "question": (
+                        turn[
+                            "question"
+                        ]
+                    ),
+                    "response": {
+                        "answer": (
+                            turn[
+                                "answer"
+                            ]
+                        ),
+                        "paper_sources": (
+                            turn[
+                                "paper_sources"
+                            ]
+                        ),
+                        "external_sources": (
+                            turn[
+                                "external_sources"
+                            ]
+                        ),
+                    },
+                }
+                for turn
+                in history_result[
+                    "turns"
+                ]
+            ]
+
+            st.success(
+                "Saved session loaded."
+            )
+
+            st.rerun()
+
+        except APIClientError as exc:
+            st.error(
+                str(exc)
+            )
 
 
 try:

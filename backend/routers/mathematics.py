@@ -1,6 +1,9 @@
 from __future__ import annotations
 
-from fastapi import APIRouter
+from fastapi import (
+    APIRouter,
+    Depends,
+)
 
 from backend.core.retrieval import (
     retrieve_session_context,
@@ -10,6 +13,10 @@ from backend.core.serializers import (
 )
 from backend.core.session_store import (
     session_store,
+)
+from backend.llm.dependency import (
+    LLMRequestConfig,
+    get_llm_request_config,
 )
 from backend.schemas import (
     MathEquationRequest,
@@ -38,10 +45,6 @@ def _optional_paper_context(
     top_k: int,
     minimum_score: float,
 ):
-    """
-    Retrieve optional uploaded-paper evidence.
-    """
-
     if (
         not use_paper_context
         or not session_id
@@ -66,10 +69,17 @@ def _optional_paper_context(
 )
 def explain_equation(
     request: MathEquationRequest,
+    llm: LLMRequestConfig = Depends(
+        get_llm_request_config
+    ),
 ) -> MathResponse:
     computation = compute_math(
-        source_text=request.source_text,
-        input_format=request.input_format,
+        source_text=(
+            request.source_text
+        ),
+        input_format=(
+            request.input_format
+        ),
         operation=request.operation,
         variable_name=(
             request.variable_name
@@ -94,17 +104,25 @@ def explain_equation(
         ),
     )
 
+    context_query = " ".join(
+        part
+        for part in [
+            request.source_text,
+            request.operation,
+            request.user_context,
+        ]
+        if part.strip()
+    )
+
     paper_context, sources = (
         _optional_paper_context(
-            session_id=request.session_id,
+            session_id=(
+                request.session_id
+            ),
             use_paper_context=(
                 request.use_paper_context
             ),
-            query=(
-                request.source_text
-                + " "
-                + request.user_context
-            ),
+            query=context_query,
             top_k=request.top_k,
             minimum_score=(
                 request.minimum_score
@@ -112,11 +130,15 @@ def explain_equation(
         )
     )
 
+    runtime_model = llm.model_spec(
+        fallback_model=(
+            request.ollama_model
+        )
+    )
+
     explanation = explain_computation(
         computation=computation,
-        ollama_model=(
-            request.ollama_model
-        ),
+        ollama_model=runtime_model,
         explanation_level=(
             request.explanation_level
         ),
@@ -126,7 +148,7 @@ def explain_equation(
         paper_context=paper_context,
     )
 
-    return MathResponse(
+    response = MathResponse(
         mode="equation",
         explanation=explanation,
         parsed_text=(
@@ -151,6 +173,20 @@ def explain_equation(
         ),
     )
 
+    if request.session_id:
+        session_store.get(
+            request.session_id
+        )
+
+        session_store.record_math_result(
+            request.session_id,
+            response.model_dump(
+                mode="json"
+            ),
+        )
+
+    return response
+
 
 @router.post(
     "/topic",
@@ -158,18 +194,28 @@ def explain_equation(
 )
 def explain_topic(
     request: MathTopicRequest,
+    llm: LLMRequestConfig = Depends(
+        get_llm_request_config
+    ),
 ) -> MathResponse:
+    context_query = " ".join(
+        part
+        for part in [
+            request.topic,
+            request.user_context,
+        ]
+        if part.strip()
+    )
+
     paper_context, sources = (
         _optional_paper_context(
-            session_id=request.session_id,
+            session_id=(
+                request.session_id
+            ),
             use_paper_context=(
                 request.use_paper_context
             ),
-            query=(
-                request.topic
-                + " "
-                + request.user_context
-            ),
+            query=context_query,
             top_k=request.top_k,
             minimum_score=(
                 request.minimum_score
@@ -177,11 +223,15 @@ def explain_topic(
         )
     )
 
+    runtime_model = llm.model_spec(
+        fallback_model=(
+            request.ollama_model
+        )
+    )
+
     explanation = explain_math_topic(
         topic=request.topic,
-        ollama_model=(
-            request.ollama_model
-        ),
+        ollama_model=runtime_model,
         explanation_level=(
             request.explanation_level
         ),
@@ -191,7 +241,7 @@ def explain_topic(
         paper_context=paper_context,
     )
 
-    return MathResponse(
+    response = MathResponse(
         mode="topic",
         explanation=explanation,
         paper_sources=(
@@ -200,3 +250,17 @@ def explain_topic(
             )
         ),
     )
+
+    if request.session_id:
+        session_store.get(
+            request.session_id
+        )
+
+        session_store.record_math_result(
+            request.session_id,
+            response.model_dump(
+                mode="json"
+            ),
+        )
+
+    return response

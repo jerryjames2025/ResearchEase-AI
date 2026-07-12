@@ -20,6 +20,9 @@ class ResearchEaseAPI:
         self,
         base_url: str,
         timeout_seconds: int = 600,
+        llm_provider: str = "ollama",
+        llm_model: str = "",
+        enable_fallback: bool = False,
     ) -> None:
         self.base_url = (
             base_url.rstrip("/")
@@ -28,6 +31,38 @@ class ResearchEaseAPI:
         self.timeout_seconds = (
             timeout_seconds
         )
+
+        self.llm_provider = (
+            llm_provider
+        )
+
+        self.llm_model = llm_model
+
+        self.enable_fallback = (
+            enable_fallback
+        )
+
+    def _llm_headers(
+        self,
+    ) -> dict[str, str]:
+        return {
+            (
+                "X-ResearchEase-"
+                "LLM-Provider"
+            ): self.llm_provider,
+
+            (
+                "X-ResearchEase-"
+                "LLM-Model"
+            ): self.llm_model,
+
+            (
+                "X-ResearchEase-"
+                "LLM-Fallback"
+            ): str(
+                self.enable_fallback
+            ).lower(),
+        }
 
     def _request(
         self,
@@ -39,12 +74,26 @@ class ResearchEaseAPI:
             f"{self.base_url}{path}"
         )
 
+        supplied_headers = dict(
+            kwargs.pop(
+                "headers",
+                {},
+            )
+        )
+
+        supplied_headers.update(
+            self._llm_headers()
+        )
+
         try:
             response = requests.request(
                 method=method,
                 url=url,
                 timeout=(
                     self.timeout_seconds
+                ),
+                headers=(
+                    supplied_headers
                 ),
                 **kwargs,
             )
@@ -69,7 +118,7 @@ class ResearchEaseAPI:
 
             raise APIClientError(
                 (
-                    f"API request failed "
+                    "API request failed "
                     f"({response.status_code}): "
                     f"{detail}"
                 )
@@ -92,6 +141,40 @@ class ResearchEaseAPI:
             "/api/v1/ready",
         )
 
+    def storage_health(
+        self,
+    ) -> dict:
+        return self._request(
+            "GET",
+            "/api/v1/storage/health",
+        )
+
+    def llm_providers(
+        self,
+    ) -> dict:
+        return self._request(
+            "GET",
+            "/api/v1/llm/providers",
+        )
+
+    def test_llm_provider(
+        self,
+        provider: str,
+        model: str,
+        enable_fallback: bool,
+    ) -> dict:
+        return self._request(
+            "POST",
+            "/api/v1/llm/test",
+            json={
+                "provider": provider,
+                "model": model,
+                "enable_fallback": (
+                    enable_fallback
+                ),
+            },
+        )
+
     def upload_paper(
         self,
         filename: str,
@@ -109,12 +192,36 @@ class ResearchEaseAPI:
             },
         )
 
+    def list_sessions(
+        self,
+        limit: int = 100,
+    ) -> dict:
+        return self._request(
+            "GET",
+            (
+                "/api/v1/papers"
+                f"?limit={limit}"
+            ),
+        )
+
     def get_session(
         self,
         session_id: str,
     ) -> dict:
         return self._request(
             "GET",
+            (
+                "/api/v1/papers/"
+                f"{session_id}"
+            ),
+        )
+
+    def delete_session(
+        self,
+        session_id: str,
+    ) -> dict:
+        return self._request(
+            "DELETE",
             (
                 "/api/v1/papers/"
                 f"{session_id}"
@@ -133,6 +240,18 @@ class ResearchEaseAPI:
                 f"{session_id}/analyze"
             ),
             json=payload,
+        )
+
+    def get_analysis(
+        self,
+        session_id: str,
+    ) -> dict:
+        return self._request(
+            "GET",
+            (
+                "/api/v1/papers/"
+                f"{session_id}/analysis"
+            ),
         )
 
     def build_index(
@@ -161,6 +280,18 @@ class ResearchEaseAPI:
                 f"{session_id}"
             ),
             json=payload,
+        )
+
+    def chat_history(
+        self,
+        session_id: str,
+    ) -> dict:
+        return self._request(
+            "GET",
+            (
+                "/api/v1/chat/"
+                f"{session_id}/history"
+            ),
         )
 
     def research_search(
@@ -209,7 +340,8 @@ class ResearchEaseAPI:
                     "application/pdf",
                 ),
             )
-            for filename, data in files
+            for filename, data
+            in files
         ]
 
         return self._request(

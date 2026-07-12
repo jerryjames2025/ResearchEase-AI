@@ -5,38 +5,51 @@ from fastapi import (
     Depends,
 )
 
+from backend.core.academic_search import (
+    search_and_rank_academic_sources,
+)
+
 from backend.core.errors import (
     APIError,
 )
+
 from backend.core.serializers import (
     serialize_external_paper,
     serialize_paper_sources,
 )
+
 from backend.core.session_store import (
     session_store,
 )
+
 from backend.core.settings import (
     APISettings,
     get_settings,
 )
+from backend.llm.dependency import (
+    LLMRequestConfig,
+    get_llm_request_config,
+)
+
 from backend.schemas import (
     AnswerMode,
+    ChatHistoryResponse,
     ChatRequest,
     ChatResponse,
+    ChatTurnResponse,
+    ExternalPaperResponse,
+    PaperSourceResponse,
 )
-from research.aggregator import (
-    search_academic_sources,
-)
+
 from research.external_answer import (
     answer_with_external_research,
     retrieve_paper_sources,
 )
-from research.ranker import (
-    rank_academic_papers,
-)
+
 from services.embedding_model import (
     load_embedding_service,
 )
+
 from services.rag_engine import (
     answer_question,
 )
@@ -46,6 +59,103 @@ router = APIRouter(
     prefix="/chat",
     tags=["chat"],
 )
+
+
+@router.get(
+    "/{session_id}/history",
+    response_model=ChatHistoryResponse,
+)
+def get_chat_history(
+    session_id: str,
+) -> ChatHistoryResponse:
+
+    session_store.get(
+        session_id
+    )
+
+    messages = (
+        session_store
+        .get_chat_messages(
+            session_id
+        )
+    )
+
+    turns: list[
+        ChatTurnResponse
+    ] = []
+
+    pending_question = ""
+
+    for message in messages:
+        if message.get(
+            "role"
+        ) == "user":
+
+            pending_question = str(
+                message.get(
+                    "content",
+                    "",
+                )
+            )
+
+            continue
+
+        if message.get(
+            "role"
+        ) != "assistant":
+            continue
+
+        turns.append(
+            ChatTurnResponse(
+                question=(
+                    pending_question
+                ),
+                answer=str(
+                    message.get(
+                        "content",
+                        "",
+                    )
+                ),
+                paper_sources=[
+                    PaperSourceResponse
+                    .model_validate(
+                        item
+                    )
+                    for item
+                    in message.get(
+                        "paper_sources",
+                        [],
+                    )
+                ],
+                external_sources=[
+                    ExternalPaperResponse
+                    .model_validate(
+                        item
+                    )
+                    for item
+                    in message.get(
+                        "external_sources",
+                        [],
+                    )
+                ],
+                answer_mode=str(
+                    message.get(
+                        "metadata",
+                        {},
+                    ).get(
+                        "answer_mode",
+                        "paper_only",
+                    )
+                ),
+            )
+        )
+
+        pending_question = ""
+
+    return ChatHistoryResponse(
+        session_id=session_id,
+        turns=turns,
+    )
 
 
 @router.post(
@@ -58,10 +168,10 @@ def research_chat(
     settings: APISettings = Depends(
         get_settings
     ),
+    llm: LLMRequestConfig = Depends(
+        get_llm_request_config
+    ),
 ) -> ChatResponse:
-    """
-    Ask a paper-only or expanded-research question.
-    """
 
     session = session_store.get(
         session_id
@@ -73,8 +183,8 @@ def research_chat(
                 status_code=409,
                 code="index_not_ready",
                 detail=(
-                    "Build the paper index before "
-                    "using research chat."
+                    "Build the paper index "
+                    "before using research chat."
                 ),
             )
 
@@ -83,11 +193,13 @@ def research_chat(
         )
 
         embedding_model = (
-            session.embedding_model_name
+            session
+            .embedding_model_name
         )
 
         embedding_device = (
-            session.embedding_device
+            session
+            .embedding_device
         )
 
         previous_history = list(
@@ -103,6 +215,13 @@ def research_chat(
 
     warnings: list[str] = []
     external_papers = []
+    cache_hit = False
+    
+    runtime_model = llm.model_spec(
+    fallback_model=(
+        request.ollama_model
+    )
+)
 
     if (
         request.answer_mode
@@ -110,15 +229,18 @@ def research_chat(
     ):
         result = answer_question(
             question=request.question,
-            vector_store=vector_store,
+            vector_store=(
+                vector_store
+            ),
             embedding_service=(
                 embedding_service
             ),
             ollama_model=(
-                request.ollama_model
+            runtime_model
             ),
             explanation_level=(
-                request.explanation_level
+                request
+                .explanation_level
             ),
             chat_history=(
                 previous_history
@@ -135,24 +257,35 @@ def research_chat(
     else:
         paper_sources = (
             retrieve_paper_sources(
-                question=request.question,
-                vector_store=vector_store,
+                question=(
+                    request.question
+                ),
+                vector_store=(
+                    vector_store
+                ),
                 embedding_service=(
                     embedding_service
                 ),
                 top_k=request.top_k,
                 minimum_score=(
-                    request.minimum_score
+                    request
+                    .minimum_score
                 ),
             )
         )
 
-        search_response = (
-            search_academic_sources(
+        bundle = (
+            search_and_rank_academic_sources(
                 query=request.question,
                 limit_per_source=(
                     request
                     .external_results_per_source
+                ),
+                embedding_model=(
+                    embedding_model
+                ),
+                embedding_device=(
+                    embedding_device
                 ),
                 use_semantic_scholar=(
                     request
@@ -164,33 +297,17 @@ def research_chat(
                 use_crossref=(
                     request.use_crossref
                 ),
-                semantic_scholar_api_key=(
-                    settings
-                    .semantic_scholar_api_key
-                ),
-                crossref_mailto=(
-                    settings.crossref_mailto
-                ),
+                settings=settings,
             )
         )
 
-        warnings = (
-            search_response.warnings
-        )
-
+        warnings = bundle.warnings
         external_papers = (
-            rank_academic_papers(
-                query=request.question,
-                papers=(
-                    search_response.papers
-                ),
-                embedding_service=(
-                    embedding_service
-                ),
-            )[:8]
+            bundle.papers[:8]
         )
+        cache_hit = bundle.cache_hit
 
-        result = (
+        expanded = (
             answer_with_external_research(
                 question=request.question,
                 paper_sources=(
@@ -200,15 +317,16 @@ def research_chat(
                     external_papers
                 ),
                 ollama_model=(
-                    request.ollama_model
+                runtime_model
                 ),
                 explanation_level=(
-                    request.explanation_level
+                    request
+                    .explanation_level
                 ),
             )
         )
 
-        answer = result.answer
+        answer = expanded.answer
 
     serialized_paper_sources = (
         serialize_paper_sources(
@@ -223,31 +341,28 @@ def research_chat(
         for paper in external_papers
     ]
 
-    with session.lock:
-        session.chat_history.extend(
-            [
-                {
-                    "role": "user",
-                    "content": (
-                        request.question
-                    ),
-                },
-                {
-                    "role": "assistant",
-                    "content": answer,
-                    "paper_sources": [
-                        source.model_dump()
-                        for source
-                        in serialized_paper_sources
-                    ],
-                    "external_sources": [
-                        source.model_dump()
-                        for source
-                        in serialized_external
-                    ],
-                },
-            ]
-        )
+    session_store.append_chat_turn(
+        session,
+        question=request.question,
+        answer=answer,
+        paper_sources=[
+            source.model_dump(
+                mode="json"
+            )
+            for source
+            in serialized_paper_sources
+        ],
+        external_sources=[
+            source.model_dump(
+                mode="json"
+            )
+            for source
+            in serialized_external
+        ],
+        answer_mode=(
+            request.answer_mode.value
+        ),
+    )
 
     return ChatResponse(
         session_id=session_id,
@@ -262,4 +377,5 @@ def research_chat(
             serialized_external
         ),
         warnings=warnings,
+        cache_hit=cache_hit,
     )

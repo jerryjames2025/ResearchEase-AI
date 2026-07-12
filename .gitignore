@@ -5,3 +5,7 @@ __pycache__/
 .streamlit/
 outputs/
 uploads/
+.env
+data/faiss/
+__pycache__/
+.pytest_cache/

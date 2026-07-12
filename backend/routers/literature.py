@@ -19,6 +19,10 @@ from backend.core.settings import (
     APISettings,
     get_settings,
 )
+from backend.llm.dependency import (
+    LLMRequestConfig,
+    get_llm_request_config,
+)
 from backend.schemas import (
     LiteratureReviewResponse,
 )
@@ -44,36 +48,78 @@ router = APIRouter(
 
 @router.post(
     "/review",
-    response_model=LiteratureReviewResponse,
+    response_model=(
+        LiteratureReviewResponse
+    ),
 )
 def create_literature_review(
     files: list[UploadFile] = File(...),
     topic: str = Form(...),
     primary_session_id: str | None = Form(
-        None
+        default=None
     ),
     ollama_model: str = Form(
-        DEFAULT_OLLAMA_MODEL
+        default=DEFAULT_OLLAMA_MODEL
     ),
     explanation_level: str = Form(
-        "Beginner"
+        default="Beginner"
     ),
     settings: APISettings = Depends(
         get_settings
     ),
+    llm: LLMRequestConfig = Depends(
+        get_llm_request_config
+    ),
 ) -> LiteratureReviewResponse:
-    """
-    Compare supporting PDFs and an optional
-    primary-session paper.
-    """
+    cleaned_primary_session_id = (
+        primary_session_id.strip()
+        if primary_session_id
+        else ""
+    )
+
+    total_requested_sources = (
+        len(files)
+        + (
+            1
+            if cleaned_primary_session_id
+            else 0
+        )
+    )
+
+    if total_requested_sources < 2:
+        raise APIError(
+            status_code=400,
+            code="insufficient_sources",
+            detail=(
+                "At least two research papers "
+                "are required."
+            ),
+        )
+
+    if (
+        total_requested_sources
+        > MAX_LITERATURE_SOURCES
+    ):
+        raise APIError(
+            status_code=400,
+            code="too_many_sources",
+            detail=(
+                "The source count exceeds "
+                f"{MAX_LITERATURE_SOURCES}."
+            ),
+        )
+
+    runtime_model = llm.model_spec(
+        fallback_model=ollama_model
+    )
 
     summaries = []
     source_number = 1
 
-    if primary_session_id:
+    if cleaned_primary_session_id:
         primary_session = (
             session_store.get(
-                primary_session_id
+                cleaned_primary_session_id
             )
         )
 
@@ -86,7 +132,7 @@ def create_literature_review(
                     f"P{source_number}"
                 ),
                 ollama_model=(
-                    ollama_model
+                    runtime_model
                 ),
             )
         )
@@ -99,64 +145,46 @@ def create_literature_review(
             settings.max_upload_mb,
         )
 
-        paper = extract_pdf(
-            upload
+        extracted_paper = (
+            extract_pdf(
+                upload
+            )
         )
 
         summaries.append(
             summarize_full_text_paper(
-                paper=paper,
+                paper=extracted_paper,
                 citation_key=(
                     f"P{source_number}"
                 ),
                 ollama_model=(
-                    ollama_model
+                    runtime_model
                 ),
             )
         )
 
         source_number += 1
 
-    if len(summaries) < 2:
-        raise APIError(
-            status_code=400,
-            code="insufficient_sources",
-            detail=(
-                "At least two papers are required "
-                "for a literature review."
-            ),
+    summaries = (
+        reassign_citation_keys(
+            summaries
         )
-
-    if (
-        len(summaries)
-        > MAX_LITERATURE_SOURCES
-    ):
-        raise APIError(
-            status_code=400,
-            code="too_many_sources",
-            detail=(
-                "The number of selected sources "
-                "exceeds the configured limit of "
-                f"{MAX_LITERATURE_SOURCES}."
-            ),
-        )
-
-    summaries = reassign_citation_keys(
-        summaries
     )
 
     synthesis = (
         generate_literature_synthesis(
             topic=topic,
             summaries=summaries,
-            ollama_model=ollama_model,
+            ollama_model=(
+                runtime_model
+            ),
             explanation_level=(
                 explanation_level
             ),
         )
     )
 
-    return LiteratureReviewResponse(
+    response = LiteratureReviewResponse(
         topic=topic,
         source_count=len(
             summaries
@@ -166,4 +194,15 @@ def create_literature_review(
             for summary in summaries
         ],
         synthesis=synthesis,
+        warnings=[],
     )
+
+    if cleaned_primary_session_id:
+        session_store.record_literature_result(
+            cleaned_primary_session_id,
+            response.model_dump(
+                mode="json"
+            ),
+        )
+
+    return response

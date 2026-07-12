@@ -19,6 +19,7 @@ class AnswerMode(
     Enum,
 ):
     PAPER_ONLY = "paper_only"
+
     EXPANDED_RESEARCH = (
         "expanded_research"
     )
@@ -31,8 +32,28 @@ class MessageResponse(BaseModel):
 class HealthResponse(BaseModel):
     status: str
     version: str
-    ollama_connected: bool | None = None
+    ollama_connected: (
+        bool | None
+    ) = None
     detail: str = ""
+
+
+class StorageServiceResponse(
+    BaseModel
+):
+    healthy: bool
+    detail: str
+
+
+class StorageHealthResponse(
+    BaseModel
+):
+    status: str
+
+    services: dict[
+        str,
+        StorageServiceResponse,
+    ]
 
 
 class PaperUploadResponse(BaseModel):
@@ -47,16 +68,26 @@ class SessionResponse(BaseModel):
     session_id: str
     filename: str
     page_count: int
+    extracted_characters: int
     created_at: datetime
+    updated_at: datetime
     analysis_ready: bool
     index_ready: bool
     chunk_count: int
-    chat_message_count: int
+    chat_message_count: int = 0
+
+
+class SessionListResponse(BaseModel):
+    sessions: list[
+        SessionResponse
+    ]
 
 
 class AnalyzeRequest(BaseModel):
     ollama_model: str = Field(
-        default=DEFAULT_OLLAMA_MODEL,
+        default=(
+            DEFAULT_OLLAMA_MODEL
+        ),
         min_length=1,
         max_length=100,
     )
@@ -77,14 +108,18 @@ class AnalyzeResponse(BaseModel):
 
 class IndexRequest(BaseModel):
     embedding_model: str = Field(
-        default=DEFAULT_EMBEDDING_MODEL,
+        default=(
+            DEFAULT_EMBEDDING_MODEL
+        ),
         min_length=2,
         max_length=200,
     )
 
     device: str = Field(
         default="auto",
-        pattern=r"^(auto|cpu|cuda)$",
+        pattern=(
+            r"^(auto|cpu|cuda)$"
+        ),
     )
 
 
@@ -93,6 +128,7 @@ class IndexResponse(BaseModel):
     chunk_count: int
     embedding_model: str
     device: str
+    index_path: str = ""
 
 
 class PaperSourceResponse(BaseModel):
@@ -155,10 +191,12 @@ class ChatRequest(BaseModel):
         le=1.0,
     )
 
-    external_results_per_source: int = Field(
-        default=5,
-        ge=1,
-        le=10,
+    external_results_per_source: int = (
+        Field(
+            default=5,
+            ge=1,
+            le=10,
+        )
     )
 
     use_semantic_scholar: bool = True
@@ -187,6 +225,35 @@ class ChatResponse(BaseModel):
         default_factory=list
     )
 
+    cache_hit: bool = False
+
+
+class ChatTurnResponse(BaseModel):
+    question: str
+    answer: str
+
+    paper_sources: list[
+        PaperSourceResponse
+    ] = Field(
+        default_factory=list
+    )
+
+    external_sources: list[
+        ExternalPaperResponse
+    ] = Field(
+        default_factory=list
+    )
+
+    answer_mode: str = "paper_only"
+
+
+class ChatHistoryResponse(BaseModel):
+    session_id: str
+
+    turns: list[
+        ChatTurnResponse
+    ]
+
 
 class ResearchSearchRequest(BaseModel):
     query: str = Field(
@@ -206,7 +273,9 @@ class ResearchSearchRequest(BaseModel):
 
     embedding_device: str = Field(
         default="auto",
-        pattern=r"^(auto|cpu|cuda)$",
+        pattern=(
+            r"^(auto|cpu|cuda)$"
+        ),
     )
 
     use_semantic_scholar: bool = True
@@ -214,7 +283,9 @@ class ResearchSearchRequest(BaseModel):
     use_crossref: bool = True
 
 
-class ResearchSearchResponse(BaseModel):
+class ResearchSearchResponse(
+    BaseModel
+):
     query: str
 
     results: list[
@@ -224,6 +295,8 @@ class ResearchSearchResponse(BaseModel):
     warnings: list[str] = Field(
         default_factory=list
     )
+
+    cache_hit: bool = False
 
 
 class MathEquationRequest(BaseModel):
@@ -333,7 +406,9 @@ class MathResponse(BaseModel):
     )
 
 
-class LiteratureReviewResponse(BaseModel):
+class LiteratureReviewResponse(
+    BaseModel
+):
     topic: str
     source_count: int
 

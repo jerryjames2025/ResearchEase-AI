@@ -18,5 +18,20 @@ uvicorn[standard]>=0.30,<1
 python-multipart>=0.0.9,<1
 pydantic-settings>=2.5,<3
 
+SQLAlchemy>=2.0.51,<2.1
+alembic>=1.18.5,<2
+psycopg[binary]>=3.3.4,<4
+pymongo>=4.17,<5
+redis>=8.0.1,<9
+
 httpx>=0.27,<1
 pytest>=8,<10
+# ---------------------------------------------------------
+# Version 9: Multi-provider LLM integrations
+# ---------------------------------------------------------
+
+langchain-openai>=1.0,<2
+langchain-anthropic>=1.0,<2
+langchain-google-genai>=4.0,<5
+langchain-huggingface>=1.0,<2
+huggingface-hub>=0.34

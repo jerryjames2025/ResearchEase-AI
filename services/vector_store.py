@@ -1,19 +1,18 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from pathlib import Path
 
 import faiss
 import numpy as np
 
-from services.pdf_parser import PaperChunk
+from services.pdf_parser import (
+    PaperChunk,
+)
 
 
 @dataclass(frozen=True)
 class SearchResult:
-    """
-    One semantic search result.
-    """
-
     rank: int
     score: float
     chunk: PaperChunk
@@ -23,8 +22,8 @@ class FaissVectorStore:
     """
     Exact semantic search using FAISS IndexFlatIP.
 
-    Because the embeddings are normalized, inner-product
-    similarity behaves like cosine similarity.
+    Normalized embeddings make inner-product
+    similarity behave like cosine similarity.
     """
 
     def __init__(
@@ -32,9 +31,11 @@ class FaissVectorStore:
         chunks: list[PaperChunk],
         embeddings: np.ndarray,
     ) -> None:
+
         if not chunks:
             raise ValueError(
-                "Cannot build an index without chunks."
+                "Cannot build an index "
+                "without chunks."
             )
 
         if embeddings.ndim != 2:
@@ -43,17 +44,22 @@ class FaissVectorStore:
                 "two-dimensional matrix."
             )
 
-        if len(chunks) != embeddings.shape[0]:
+        if (
+            len(chunks)
+            != embeddings.shape[0]
+        ):
             raise ValueError(
-                "The number of chunks and embedding "
-                "rows must match."
+                "The number of chunks and "
+                "embedding rows must match."
             )
 
         self.chunks = chunks
 
-        self.embeddings = np.ascontiguousarray(
-            embeddings,
-            dtype=np.float32,
+        self.embeddings = (
+            np.ascontiguousarray(
+                embeddings,
+                dtype=np.float32,
+            )
         )
 
         self.dimension = int(
@@ -68,12 +74,77 @@ class FaissVectorStore:
             self.embeddings
         )
 
+    @classmethod
+    def from_existing_index(
+        cls,
+        chunks: list[PaperChunk],
+        index: faiss.Index,
+    ) -> "FaissVectorStore":
+
+        if not chunks:
+            raise ValueError(
+                "Cannot restore an index "
+                "without chunks."
+            )
+
+        if int(
+            index.ntotal
+        ) != len(chunks):
+            raise ValueError(
+                "Stored FAISS vectors and "
+                "MongoDB chunks do not match."
+            )
+
+        instance = cls.__new__(
+            cls
+        )
+
+        instance.chunks = chunks
+        instance.embeddings = None
+        instance.dimension = int(
+            index.d
+        )
+        instance.index = index
+
+        return instance
+
+    @classmethod
+    def load(
+        cls,
+        chunks: list[PaperChunk],
+        path: str | Path,
+    ) -> "FaissVectorStore":
+
+        index = faiss.read_index(
+            str(path)
+        )
+
+        return cls.from_existing_index(
+            chunks,
+            index,
+        )
+
+    def save(
+        self,
+        path: str | Path,
+    ) -> None:
+
+        destination = Path(
+            path
+        )
+
+        destination.parent.mkdir(
+            parents=True,
+            exist_ok=True,
+        )
+
+        faiss.write_index(
+            self.index,
+            str(destination),
+        )
+
     @property
     def size(self) -> int:
-        """
-        Number of vectors in the FAISS index.
-        """
-
         return int(
             self.index.ntotal
         )
@@ -83,17 +154,15 @@ class FaissVectorStore:
         query_embedding: np.ndarray,
         top_k: int,
     ) -> list[SearchResult]:
-        """
-        Search for the chunks that are most similar
-        to the question embedding.
-        """
 
         if self.size == 0:
             return []
 
-        query_embedding = np.ascontiguousarray(
-            query_embedding,
-            dtype=np.float32,
+        query_embedding = (
+            np.ascontiguousarray(
+                query_embedding,
+                dtype=np.float32,
+            )
         )
 
         if (
@@ -101,11 +170,14 @@ class FaissVectorStore:
             or query_embedding.shape[0] != 1
         ):
             raise ValueError(
-                "Query embedding must have shape "
-                "(1, dimension)."
+                "Query embedding must have "
+                "shape (1, dimension)."
             )
 
-        if query_embedding.shape[1] != self.dimension:
+        if (
+            query_embedding.shape[1]
+            != self.dimension
+        ):
             raise ValueError(
                 "Query and document embedding "
                 "dimensions differ."
@@ -119,12 +191,16 @@ class FaissVectorStore:
             ),
         )
 
-        scores, indices = self.index.search(
-            query_embedding,
-            requested_k,
+        scores, indices = (
+            self.index.search(
+                query_embedding,
+                requested_k,
+            )
         )
 
-        results: list[SearchResult] = []
+        results: list[
+            SearchResult
+        ] = []
 
         for rank, (
             score,

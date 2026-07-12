@@ -1,8 +1,14 @@
 from __future__ import annotations
 
-from typing import Callable
+from collections.abc import Callable
+from typing import Any
 
 import requests
+
+from langchain_core.messages import (
+    HumanMessage,
+    SystemMessage,
+)
 
 from config import (
     MAX_SUMMARY_CHUNKS,
@@ -11,7 +17,19 @@ from config import (
     SUMMARY_CHUNK_OVERLAP,
     SUMMARY_CHUNK_SIZE,
 )
-from services.pdf_parser import split_text
+
+from backend.core.settings import (
+    get_settings,
+)
+from backend.llm.runtime import (
+    message_text,
+)
+from langchain_layer.model_factory import (
+    get_ollama_chat_model,
+)
+from services.pdf_parser import (
+    split_text,
+)
 from services.prompts import (
     chunk_summary_prompt,
     final_analysis_prompt,
@@ -20,118 +38,99 @@ from services.prompts import (
 
 class OllamaError(RuntimeError):
     """
-    Error raised when Ollama cannot complete a request.
+    Backward-compatible generation error.
+
+    The name remains OllamaError so existing UI code
+    and exception handlers continue working.
     """
 
 
-def check_ollama() -> tuple[bool, str]:
+def check_ollama() -> tuple[
+    bool,
+    str,
+]:
     """
-    Check whether the local Ollama server is running.
+    Check the local Ollama service.
     """
+
+    settings = get_settings()
 
     try:
-        base_url = OLLAMA_CHAT_URL.rsplit(
-            "/api/",
-            1,
-        )[0]
-
         response = requests.get(
-            f"{base_url}/api/tags",
-            timeout=10,
+            (
+                settings
+                .ollama_base_url
+                .rstrip("/")
+                + "/api/tags"
+            ),
+            timeout=5,
         )
 
         response.raise_for_status()
 
-        return True, "Ollama is connected."
+        return (
+            True,
+            "Ollama is connected.",
+        )
 
     except requests.RequestException as exc:
-        return False, (
-            "Ollama is not reachable at "
-            "http://localhost:11434. "
-            "Start Ollama and confirm that the selected "
-            "model is installed. "
-            f"Technical detail: {exc}"
+        return (
+            False,
+            f"Ollama is unavailable: {exc}",
         )
 
 
 def chat(
     model: str,
     prompt: str,
-    system_prompt: str | None = None,
+    system_prompt: str = "",
     temperature: float = 0.1,
 ) -> str:
     """
-    Send a non-streaming chat request to Ollama.
+    Generate through the selected Version 9 provider.
+
+    Plain model names still use Ollama.
     """
 
-    messages: list[dict[str, str]] = []
+    if not prompt.strip():
+        raise ValueError(
+            "Prompt cannot be empty."
+        )
 
-    if system_prompt:
+    messages = []
+
+    if system_prompt.strip():
         messages.append(
-            {
-                "role": "system",
-                "content": system_prompt,
-            }
+            SystemMessage(
+                content=system_prompt
+            )
         )
 
     messages.append(
-        {
-            "role": "user",
-            "content": prompt,
-        }
+        HumanMessage(
+            content=prompt
+        )
     )
 
-    payload = {
-        "model": model,
-        "messages": messages,
-        "stream": False,
-        "options": {
-            "temperature": temperature,
-        },
-    }
-
     try:
-        response = requests.post(
-            OLLAMA_CHAT_URL,
-            json=payload,
-            timeout=REQUEST_TIMEOUT_SECONDS,
+        llm = get_ollama_chat_model(
+            model_name=model,
+            temperature=temperature,
+            json_mode=False,
         )
 
-        response.raise_for_status()
-
-    except requests.Timeout as exc:
-        raise OllamaError(
-            "Ollama took too long to respond. "
-            "Try a smaller model or a shorter paper."
-        ) from exc
-
-    except requests.RequestException as exc:
-        raise OllamaError(
-            "Could not communicate with Ollama. "
-            "Confirm that Ollama is running and that "
-            "the selected model has been downloaded."
-        ) from exc
-
-    try:
-        response_data = response.json()
-
-        content = response_data[
-            "message"
-        ][
-            "content"
-        ].strip()
-
-    except (KeyError, TypeError, ValueError) as exc:
-        raise OllamaError(
-            "Ollama returned an unexpected response."
-        ) from exc
-
-    if not content:
-        raise OllamaError(
-            "Ollama returned an empty response."
+        result = llm.invoke(
+            messages
         )
 
-    return content
+        return message_text(
+            result
+        ).strip()
+
+    except Exception as exc:
+        raise OllamaError(
+            f"LLM generation failed: {exc}"
+        ) from exc
 
 
 def analyze_paper(
@@ -141,31 +140,52 @@ def analyze_paper(
     model: str,
     explanation_level: str,
     progress_callback: (
-        Callable[[int, int, str], None] | None
+        Callable[
+            [
+                int,
+                int,
+                str,
+            ],
+            None,
+        ]
+        | None
     ) = None,
-) -> tuple[str, list[str]]:
+) -> tuple[
+    str,
+    list[str],
+]:
     """
-    Summarize a complete paper using hierarchical summarization.
+    Analyze a complete paper through any Version 9
+    LLM provider.
+    """
 
-    First, each large section is summarized.
-    Then, the partial summaries are combined into one report.
-    """
+    if not text.strip():
+        raise ValueError(
+            "Paper text cannot be empty."
+        )
 
     chunks = split_text(
-        text=text,
-        chunk_size=SUMMARY_CHUNK_SIZE,
-        overlap=SUMMARY_CHUNK_OVERLAP,
+        text,
+        chunk_size=(
+            SUMMARY_CHUNK_SIZE
+        ),
+        overlap=(
+            SUMMARY_CHUNK_OVERLAP
+        ),
     )
 
-    # Prevent a huge number of local LLM calls.
-    chunks = chunks[:MAX_SUMMARY_CHUNKS]
+    chunks = chunks[
+        :MAX_SUMMARY_CHUNKS
+    ]
 
     if not chunks:
         raise ValueError(
-            "No text was available for analysis."
+            "No paper chunks were created."
         )
 
-    partial_summaries: list[str] = []
+    partial_summaries: list[
+        str
+    ] = []
 
     total_steps = len(chunks) + 1
 
@@ -178,12 +198,12 @@ def analyze_paper(
                 index - 1,
                 total_steps,
                 (
-                    f"Analyzing section {index} "
-                    f"of {len(chunks)}..."
+                    "Analyzing paper section "
+                    f"{index} of {len(chunks)}"
                 ),
             )
 
-        partial_summary = chat(
+        summary = chat(
             model=model,
             prompt=chunk_summary_prompt(
                 chunk=chunk,
@@ -191,46 +211,48 @@ def analyze_paper(
                 total=len(chunks),
             ),
             system_prompt=(
-                "Analyze academic text faithfully. "
-                "Never fabricate missing information."
+                "Analyze academic evidence carefully. "
+                "Do not invent unsupported details."
             ),
-            temperature=0.1,
+            temperature=0.05,
         )
 
         partial_summaries.append(
-            partial_summary
+            summary
         )
 
     if progress_callback:
         progress_callback(
             len(chunks),
             total_steps,
-            (
-                "Combining the sections into the "
-                "final report..."
-            ),
+            "Creating final paper analysis",
         )
 
-    final_report = chat(
+    final_analysis = chat(
         model=model,
         prompt=final_analysis_prompt(
             filename=filename,
             page_count=page_count,
-            partial_summaries=partial_summaries,
+            partial_summaries=(
+                partial_summaries
+            ),
             level=explanation_level,
         ),
         system_prompt=(
-            "Be precise, evidence-aware, and honest "
-            "about missing information."
+            "Produce a faithful academic paper analysis "
+            "using only the supplied evidence notes."
         ),
-        temperature=0.15,
+        temperature=0.05,
     )
 
     if progress_callback:
         progress_callback(
             total_steps,
             total_steps,
-            "Analysis complete.",
+            "Paper analysis completed",
         )
 
-    return final_report, partial_summaries
+    return (
+        final_analysis,
+        partial_summaries,
+    )
