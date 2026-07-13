@@ -20,12 +20,12 @@ from frontend.vector_controls import (
 
 
 st.set_page_config(
-    page_title="ResearchEase AI — Version 14",
+    page_title="ResearchEase AI — Version 14.3",
     page_icon="📚",
     layout="wide",
 )
 
-st.title("📚 ResearchEase AI — Version 14")
+st.title("📚 ResearchEase AI — Version 14.3")
 
 st.caption(
     "FastAPI-powered research assistant with persistent storage, "

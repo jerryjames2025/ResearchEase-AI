@@ -1,0 +1,188 @@
+name: Publish ResearchEase Images
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Release version, such as 14.3.0 or 14.3.0-rc.1"
+        required: true
+        default: "14.3.0"
+        type: string
+
+permissions:
+  contents: read
+  packages: write
+  attestations: write
+  id-token: write
+
+concurrency:
+  group: publish-images-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAMESPACE: jerryjames2025
+
+jobs:
+  publish:
+    name: Publish ${{ matrix.name }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+
+    strategy:
+      fail-fast: false
+
+      matrix:
+        include:
+          - name: FastAPI CPU Image
+            image_name: researchease-ai-api
+            dockerfile: Dockerfile.api.ci
+            cache_scope: researchease-api-cpu
+            title: ResearchEase AI FastAPI
+            description: CPU-ready FastAPI backend for the ResearchEase AI research platform
+
+          - name: Streamlit Image
+            image_name: researchease-ai-frontend
+            dockerfile: Dockerfile.frontend
+            cache_scope: researchease-frontend
+            title: ResearchEase AI Streamlit
+            description: Streamlit frontend for the ResearchEase AI research platform
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Resolve and validate release version
+        id: version
+        shell: bash
+        env:
+          MANUAL_VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+
+          if [[ "${GITHUB_EVENT_NAME}" == "workflow_dispatch" ]]; then
+            RAW_VERSION="${MANUAL_VERSION}"
+          else
+            RAW_VERSION="${GITHUB_REF_NAME}"
+          fi
+
+          VERSION="${RAW_VERSION#v}"
+
+          VERSION_PATTERN='^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z][0-9A-Za-z.-]*)?$'
+
+          if [[ ! "${VERSION}" =~ ${VERSION_PATTERN} ]]; then
+            echo "Invalid release version: ${VERSION}"
+            echo "Expected examples:"
+            echo "  14.3.0"
+            echo "  14.3.0-rc.1"
+            exit 1
+          fi
+
+          MAJOR="${VERSION%%.*}"
+
+          REMAINING="${VERSION#*.}"
+          MINOR="${REMAINING%%.*}"
+
+          MAJOR_MINOR="${MAJOR}.${MINOR}"
+
+          if [[ "${VERSION}" == *-* ]]; then
+            STABLE="false"
+          else
+            STABLE="true"
+          fi
+
+          echo "version=${VERSION}" >> "${GITHUB_OUTPUT}"
+          echo "major=${MAJOR}" >> "${GITHUB_OUTPUT}"
+          echo "major_minor=${MAJOR_MINOR}" >> "${GITHUB_OUTPUT}"
+          echo "stable=${STABLE}" >> "${GITHUB_OUTPUT}"
+
+          echo "Resolved version: ${VERSION}"
+          echo "Stable release: ${STABLE}"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v4
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Generate Docker metadata
+        id: metadata
+        uses: docker/metadata-action@v6
+        with:
+          images: >-
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAMESPACE }}/${{ matrix.image_name }}
+
+          tags: |
+            type=raw,value=${{ steps.version.outputs.version }}
+            type=raw,value=${{ steps.version.outputs.major_minor }},enable=${{ steps.version.outputs.stable == 'true' }}
+            type=raw,value=${{ steps.version.outputs.major }},enable=${{ steps.version.outputs.stable == 'true' }}
+            type=raw,value=latest,enable=${{ steps.version.outputs.stable == 'true' }}
+            type=sha,prefix=sha-
+
+          labels: |
+            org.opencontainers.image.title=${{ matrix.title }}
+            org.opencontainers.image.description=${{ matrix.description }}
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.version=${{ steps.version.outputs.version }}
+            org.opencontainers.image.vendor=ResearchEase AI
+
+      - name: Build and publish image
+        id: build
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: ./${{ matrix.dockerfile }}
+          platforms: linux/amd64
+
+          push: true
+
+          tags: ${{ steps.metadata.outputs.tags }}
+          labels: ${{ steps.metadata.outputs.labels }}
+
+          cache-from: |
+            type=gha,scope=${{ matrix.cache_scope }}
+
+          cache-to: |
+            type=gha,mode=max,scope=${{ matrix.cache_scope }}
+
+          provenance: false
+          sbom: false
+
+      - name: Create build provenance attestation
+        uses: actions/attest@v4
+        with:
+          subject-name: >-
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAMESPACE }}/${{ matrix.image_name }}
+
+          subject-digest: ${{ steps.build.outputs.digest }}
+          push-to-registry: true
+
+      - name: Write publication summary
+        shell: bash
+        run: |
+          {
+            echo "## ${{ matrix.name }}"
+            echo ""
+            echo "**Image:**"
+            echo ""
+            echo "\`${{ env.REGISTRY }}/${{ env.IMAGE_NAMESPACE }}/${{ matrix.image_name }}:${{ steps.version.outputs.version }}\`"
+            echo ""
+            echo "**Digest:**"
+            echo ""
+            echo "\`${{ steps.build.outputs.digest }}\`"
+            echo ""
+            echo "**Published tags:**"
+            echo ""
+            echo '```text'
+            echo "${{ steps.metadata.outputs.tags }}"
+            echo '```'
+          } >> "${GITHUB_STEP_SUMMARY}"
