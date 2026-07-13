@@ -16,7 +16,7 @@ class APISettings(BaseSettings):
     """
 
     app_name: str = "ResearchEase AI API"
-    api_version: str = "12.0.0"
+    api_version: str = "13.0.0"
     api_prefix: str = "/api/v1"
 
     debug: bool = True

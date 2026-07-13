@@ -19,3 +19,19 @@ artifacts/fine_tuning_temp/
 
 # Hugging Face cache, when stored locally
 .huggingface/
+
+# Docker secrets
+.env.docker
+
+# Docker-local generated data
+docker-data/
+
+# MLflow local files
+mlflow.db
+mlartifacts/
+mlruns/
+
+# Model and adapter data
+artifacts/
+data/
+.huggingface/+

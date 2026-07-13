@@ -1,0 +1,89 @@
+FROM python:3.11-slim
+
+ARG INSTALL_CUDA_TORCH=true
+ARG PYTORCH_INDEX_URL=https://download.pytorch.org/whl/cu118
+
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+ENV PIP_DISABLE_PIP_VERSION_CHECK=1
+ENV PIP_NO_CACHE_DIR=1
+
+ENV APP_HOME=/app
+ENV HF_HOME=/home/appuser/.cache/huggingface
+ENV TOKENIZERS_PARALLELISM=false
+
+WORKDIR ${APP_HOME}
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        build-essential \
+        gcc \
+        g++ \
+        git \
+        curl \
+        libpq-dev \
+        libgl1 \
+        libglib2.0-0 \
+        libgomp1 \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN groupadd --system appuser \
+    && useradd \
+        --system \
+        --gid appuser \
+        --create-home \
+        --shell /bin/bash \
+        appuser
+
+COPY requirements.txt /tmp/requirements.txt
+
+RUN python -m pip install --upgrade \
+        pip \
+        setuptools \
+        wheel \
+    && python -m pip install \
+        -r /tmp/requirements.txt
+
+# ---------------------------------------------------------
+# Install CUDA-enabled PyTorch with its required NVIDIA
+# runtime dependencies.
+#
+# Do not use --no-deps here. PyTorch needs packages such as
+# nvidia-cuda-runtime-cu11 and nvidia-cublas-cu11.
+# ---------------------------------------------------------
+
+RUN if [ "${INSTALL_CUDA_TORCH}" = "true" ]; then \
+        python -m pip uninstall -y \
+            torch \
+            torchvision \
+            torchaudio; \
+        python -m pip install \
+            torch \
+            torchvision \
+            torchaudio \
+            --index-url "${PYTORCH_INDEX_URL}"; \
+    fi
+
+# Verify that PyTorch can import inside the built image.
+# CUDA availability may still be False during image build
+# because the GPU is attached only when the container runs.
+RUN python -c "import torch; print('Torch:', torch.__version__); print('CUDA build:', torch.version.cuda)"
+
+COPY --chown=appuser:appuser . ${APP_HOME}
+
+RUN mkdir -p \
+        /app/data/faiss \
+        /app/artifacts/lora_adapters \
+        /app/artifacts/fine_tuning_jobs \
+        /app/artifacts/fine_tuning_temp \
+        /home/appuser/.cache/huggingface \
+    && chown -R appuser:appuser \
+        /app/data \
+        /app/artifacts \
+        /home/appuser/.cache
+
+USER appuser
+
+EXPOSE 8000
+
+CMD ["python", "docker/api_entrypoint.py"]

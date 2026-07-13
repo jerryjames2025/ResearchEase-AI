@@ -1,0 +1,303 @@
+name: researchease-ai
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: researchease-postgres
+    restart: unless-stopped
+
+    env_file:
+      - .env.docker
+
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-researchease}
+      POSTGRES_USER: ${POSTGRES_USER:-researchease}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-researchease_dev_password}
+
+    ports:
+      - "5432:5432"
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\""
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+    networks:
+      - researchease_network
+
+  mongodb:
+    image: mongo:7
+    container_name: researchease-mongodb
+    restart: unless-stopped
+
+    env_file:
+      - .env.docker
+
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME:-researchease}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD:-researchease_mongo_password}
+
+    ports:
+      - "27017:27017"
+
+    volumes:
+      - mongodb_data:/data/db
+      - mongodb_config:/data/configdb
+
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "mongosh --host 127.0.0.1 --port 27017 --quiet --username \"$${MONGO_INITDB_ROOT_USERNAME}\" --password \"$${MONGO_INITDB_ROOT_PASSWORD}\" --authenticationDatabase admin --eval \"quit(db.adminCommand({ ping: 1 }).ok ? 0 : 2)\""
+        ]
+      interval: 10s
+      timeout: 8s
+      retries: 12
+      start_period: 15s
+
+    networks:
+      - researchease_network
+
+  redis:
+    image: redis:7-alpine
+    container_name: researchease-redis
+    restart: unless-stopped
+
+    env_file:
+      - .env.docker
+
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-researchease_redis_password}
+
+    command:
+      - redis-server
+      - --appendonly
+      - "yes"
+      - --requirepass
+      - ${REDIS_PASSWORD:-researchease_redis_password}
+
+    ports:
+      - "6379:6379"
+
+    volumes:
+      - redis_data:/data
+
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "redis-cli -a \"$${REDIS_PASSWORD}\" ping | grep PONG"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+
+    networks:
+      - researchease_network
+
+  mlflow:
+    image: ghcr.io/mlflow/mlflow:v3.13.0
+    container_name: researchease-mlflow
+    restart: unless-stopped
+
+    command:
+      - mlflow
+      - server
+      - --host
+      - 0.0.0.0
+      - --port
+      - "5000"
+      - --backend-store-uri
+      - sqlite:////mlflow/mlflow.db
+      - --artifacts-destination
+      - /mlflow/artifacts
+
+    ports:
+      - "5000:5000"
+
+    volumes:
+      - mlflow_data:/mlflow
+
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:5000/health', timeout=5)"
+        ]
+      interval: 10s
+      timeout: 8s
+      retries: 15
+      start_period: 20s
+
+    networks:
+      - researchease_network
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+      args:
+        INSTALL_CUDA_TORCH: ${INSTALL_CUDA_TORCH:-true}
+        PYTORCH_INDEX_URL: ${PYTORCH_INDEX_URL:-https://download.pytorch.org/whl/cu118}
+
+    container_name: researchease-api
+    restart: unless-stopped
+
+    env_file:
+      - .env.docker
+
+    environment:
+      RESEARCHEASE_API_HOST: 0.0.0.0
+      RESEARCHEASE_API_PORT: "8000"
+      RESEARCHEASE_API_WORKERS: "1"
+      RESEARCHEASE_RUN_MIGRATIONS: "true"
+
+      RESEARCHEASE_POSTGRES_URL: >-
+        postgresql+psycopg://${POSTGRES_USER:-researchease}:${POSTGRES_PASSWORD:-researchease_dev_password}@postgres:5432/${POSTGRES_DB:-researchease}
+
+      RESEARCHEASE_MONGO_URL: >-
+        mongodb://${MONGO_INITDB_ROOT_USERNAME:-researchease}:${MONGO_INITDB_ROOT_PASSWORD:-researchease_mongo_password}@mongodb:27017/researchease?authSource=admin
+
+      # Included as an alias in case your settings field is mongodb_url.
+      RESEARCHEASE_MONGODB_URL: >-
+        mongodb://${MONGO_INITDB_ROOT_USERNAME:-researchease}:${MONGO_INITDB_ROOT_PASSWORD:-researchease_mongo_password}@mongodb:27017/researchease?authSource=admin
+
+      RESEARCHEASE_REDIS_URL: >-
+        redis://:${REDIS_PASSWORD:-researchease_redis_password}@redis:6379/0
+
+      RESEARCHEASE_MLFLOW_TRACKING_URI: http://mlflow:5000
+
+      RESEARCHEASE_OLLAMA_BASE_URL: ${RESEARCHEASE_OLLAMA_BASE_URL:-http://host.docker.internal:11434}
+
+      RESEARCHEASE_FAISS_DIRECTORY: /app/data/faiss
+
+      RESEARCHEASE_FINE_TUNING_OUTPUT_DIR: /app/artifacts/lora_adapters
+      RESEARCHEASE_FINE_TUNING_JOBS_DIR: /app/artifacts/fine_tuning_jobs
+      RESEARCHEASE_FINE_TUNING_TEMP_DIR: /app/artifacts/fine_tuning_temp
+
+      HF_HOME: /home/appuser/.cache/huggingface
+      TOKENIZERS_PARALLELISM: "false"
+
+    ports:
+      - "8000:8000"
+
+    volumes:
+      - research_data:/app/data
+      - research_artifacts:/app/artifacts
+      - huggingface_cache:/home/appuser/.cache/huggingface
+
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+      mongodb:
+        condition: service_healthy
+
+      redis:
+        condition: service_healthy
+
+      mlflow:
+        condition: service_healthy
+
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/v1/health', timeout=10)"
+        ]
+      interval: 15s
+      timeout: 12s
+      retries: 12
+      start_period: 60s
+
+    stop_grace_period: 30s
+
+    networks:
+      - researchease_network
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+
+    container_name: researchease-frontend
+    restart: unless-stopped
+
+    env_file:
+      - .env.docker
+
+    environment:
+      RESEARCHEASE_API_URL: http://api:8000
+      RESEARCHEASE_MLFLOW_UI_URL: http://127.0.0.1:5000
+
+    ports:
+      - "8501:8501"
+
+    depends_on:
+      api:
+        condition: service_healthy
+
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "curl",
+          "--fail",
+          "--silent",
+          "http://127.0.0.1:8501/_stcore/health"
+        ]
+      interval: 15s
+      timeout: 8s
+      retries: 10
+      start_period: 20s
+
+    networks:
+      - researchease_network
+
+
+networks:
+  researchease_network:
+    name: researchease-network
+
+
+volumes:
+  postgres_data:
+    name: researchease-postgres-data
+
+  mongodb_data:
+    name: researchease-mongodb-data
+
+  mongodb_config:
+    name: researchease-mongodb-config
+
+  redis_data:
+    name: researchease-redis-data
+
+  mlflow_data:
+    name: researchease-mlflow-data
+
+  research_data:
+    name: researchease-research-data
+
+  research_artifacts:
+    name: researchease-research-artifacts
+
+  huggingface_cache:
+    name: researchease-huggingface-cache

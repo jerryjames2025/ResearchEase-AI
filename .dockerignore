@@ -1,0 +1,62 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Virtual environments
+venv/
+.venv/
+env/
+ENV/
+
+# Git
+.git/
+.gitignore
+
+# Editors
+.vscode/
+.idea/
+
+# Environment files
+.env
+.env.*
+!.env.docker.example
+
+# Local databases and logs
+*.db
+*.sqlite
+*.sqlite3
+*.log
+
+# Generated application data
+artifacts/
+data/
+mlartifacts/
+mlruns/
+
+# Downloaded models and caches
+.cache/
+.huggingface/
+models/
+
+# Existing output files
+outputs/
+reports/
+temp/
+tmp/
+
+# Operating system
+.DS_Store
+Thumbs.db
+
+# Tests are copied only if container tests are desired.
+# Keep tests included for Version 13 verification.
+
+# Large user documents
+
+*.pdf
+*.docx
+*.pptx
+*.zip
