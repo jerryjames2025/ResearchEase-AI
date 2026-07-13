@@ -1,0 +1,26 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api.ci
+
+    environment:
+      RESEARCHEASE_API_WORKERS: "1"
+
+      RESEARCHEASE_FAISS_DIRECTORY: /app/data/faiss
+
+      RESEARCHEASE_FINE_TUNING_OUTPUT_DIR: >-
+        /app/artifacts/lora_adapters
+
+      RESEARCHEASE_FINE_TUNING_JOBS_DIR: >-
+        /app/artifacts/fine_tuning_jobs
+
+      RESEARCHEASE_FINE_TUNING_TEMP_DIR: >-
+        /app/artifacts/fine_tuning_temp
+
+      TOKENIZERS_PARALLELISM: "false"
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
