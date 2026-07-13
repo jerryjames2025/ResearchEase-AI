@@ -129,6 +129,7 @@ def test_provider(
             "response_metadata",
             {},
         )
+        
         or {}
     )
 
