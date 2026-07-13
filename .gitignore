@@ -35,3 +35,12 @@ mlruns/
 artifacts/
 data/
 .huggingface/+
+
+# GitHub Actions generated requirements
+requirements.ci.generated.txt
+
+# CI reports
+coverage.xml
+htmlcov/
+junit/
+test-results/

@@ -90,7 +90,7 @@ def test_provider(
         raw_message = str(exc)
         lowered = raw_message.lower()
 
-    quota_markers = (
+        quota_markers = (
         "credit balance is too low",
         "insufficient_quota",
         "quota exceeded",
@@ -121,7 +121,7 @@ def test_provider(
         status_code=503,
         code=error_code,
         detail=detail,
-    ) from exc
+        )
 
     metadata = dict(
         getattr(

@@ -1,0 +1,138 @@
+name: ResearchEase Python CI
+
+on:
+  push:
+    branches:
+      - main
+      - master
+      - develop
+      - version-14-cicd
+
+  pull_request:
+    branches:
+      - main
+      - master
+      - develop
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: python-ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHONUNBUFFERED: "1"
+  PYTHONDONTWRITEBYTECODE: "1"
+  TOKENIZERS_PARALLELISM: "false"
+
+  HF_HUB_OFFLINE: "1"
+  TRANSFORMERS_OFFLINE: "1"
+
+  RESEARCHEASE_POSTGRES_URL: >-
+    postgresql+psycopg://researchease:researchease@127.0.0.1:5432/researchease
+
+  RESEARCHEASE_MONGO_URL: >-
+    mongodb://127.0.0.1:27017/researchease
+
+  RESEARCHEASE_MONGODB_URL: >-
+    mongodb://127.0.0.1:27017/researchease
+
+  RESEARCHEASE_REDIS_URL: >-
+    redis://127.0.0.1:6379/0
+
+  RESEARCHEASE_MLFLOW_TRACKING_URI: >-
+    http://127.0.0.1:5000
+
+  RESEARCHEASE_OLLAMA_BASE_URL: >-
+    http://127.0.0.1:11434
+
+  RESEARCHEASE_FAISS_DIRECTORY: >-
+    artifacts/ci/faiss
+
+  RESEARCHEASE_FINE_TUNING_OUTPUT_DIR: >-
+    artifacts/ci/lora_adapters
+
+  RESEARCHEASE_FINE_TUNING_JOBS_DIR: >-
+    artifacts/ci/fine_tuning_jobs
+
+  RESEARCHEASE_FINE_TUNING_TEMP_DIR: >-
+    artifacts/ci/fine_tuning_temp
+
+jobs:
+  test:
+    name: Python 3.11 Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: requirements.txt
+
+      - name: Display environment information
+        run: |
+          python --version
+          python -m pip --version
+          uname -a
+
+      - name: Generate CPU-safe CI requirements
+        run: |
+          python scripts/create_ci_requirements.py
+          cat requirements.ci.generated.txt
+
+      - name: Upgrade Python packaging tools
+        run: |
+          python -m pip install --upgrade pip setuptools wheel
+
+      - name: Install CPU-only PyTorch
+        run: |
+          python -m pip install \
+            torch==2.7.1 \
+            --index-url https://download.pytorch.org/whl/cpu
+
+      - name: Install project dependencies
+        run: |
+          python -m pip install \
+            -r requirements.ci.generated.txt
+
+      - name: Install CI tools
+        run: |
+          python -m pip install \
+            pytest \
+            pytest-cov \
+            ruff
+
+      - name: Verify PyTorch configuration
+        run: |
+          python -c "import torch; print('Torch:', torch.__version__); print('CUDA available:', torch.cuda.is_available())"
+
+      - name: Compile Python source
+        run: |
+          python -m compileall -q .
+
+      - name: Run critical Ruff checks
+        run: |
+          ruff check . \
+            --output-format=github \
+            --select=E9,F63,F7,F82
+
+      - name: Run automated tests
+        run: |
+          pytest \
+            -v \
+            -p no:cacheprovider \
+            --junitxml=test-results/pytest.xml \
+            --cov=backend \
+            --cov=services \
+            --cov=research \
+            --cov-report=term-missing \
+            --cov-report=xml:coverage.xml
