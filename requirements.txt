@@ -40,7 +40,7 @@ huggingface-hub>=0.34
 # Version 10: Pinecone vector database
 # ---------------------------------------------------------
 
-pinecone>=9,<10
+pinecone>=9.1.0,<10
 
 # ---------------------------------------------------------
 # Version 11: MLflow experiment tracking and evaluation
