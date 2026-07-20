@@ -85,7 +85,7 @@ jobs:
             --services
 
       - name: Upload rendered Compose configuration
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: rendered-compose-configuration
           path: compose.rendered.yaml
